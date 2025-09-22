@@ -1,0 +1,37 @@
+
+# Build trees
+build/
+out/
+bin/
+obj/
+x64/
+Debug/
+Release/
+*.log
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.VC.db
+*.VC.opendb
+ipch/
+*.opendb
+*.vsidx
+*.ipch
+*.vcxproj
+*.filters
+*.sln
+
+# Compiler/linker artifacts
+*.pdb
+*.ilk
+*.idb
+*.obj
+*.exp
+*.lib
+*.dll
+*.exe
+
+# RenderDoc
+*.rdc
