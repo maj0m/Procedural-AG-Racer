@@ -13,7 +13,12 @@ struct GrassInstance {
 };
 
 layout(std430, binding = 1) buffer GrassOut {
-    GrassInstance instances[];
+    // 16 byte header (std430)
+    uint instanceCount;  // atomic counter (number of VALID grass blades)
+    uint _pad0;
+    uint _pad1;
+    uint _pad2;
+    GrassInstance instances[];  // payload starts at offset 16
 };
 
 // UBO set in ChunkManager
@@ -111,9 +116,11 @@ float cubeVal(vec3 pos) {
 bool isUnderground(vec3 pos) {
     
     // Hills and Features
-    float warpScale = 0.005;
-    vec3 warp = vec3(simplex3d(pos * warpScale), simplex3d(pos * warpScale), simplex3d(pos * warpScale));
-    pos += warp * 40;
+//    float warpScale = 0.005;
+//    vec3 warp = vec3(simplex3d(pos * warpScale), simplex3d(pos * warpScale), simplex3d(pos * warpScale));
+//    pos += warp * 40;
+    
+    if(pos.y <2.0) return true;
 
     float noise = 0.0;
     float frequency = u_frequency;
@@ -157,16 +164,19 @@ void main() {
     float wx = u_chunkId.x * u_chunkSize + baseX + jx;
     float wz = u_chunkId.z * u_chunkSize + baseZ + jz;
     float wy = cubeVal(vec3(wx, 0.0, wz)); // sample bedrock height
-
-    // params
     vec3 pos = vec3(wx, wy, wz);
+
+    // skip writing if blade is underground
+    if (isUnderground(pos)) { return; }
+
+    // other params
     float yaw    = rand01(s) * (2.0f * PI);
     float height = mix(3.75f, 4.35f, rand01(s));
     float width  = mix(1.60f, 2.20f, rand01(s));
     float phase  = rand01(s) * (2.0f * PI);
 
 
-        // Create grass instance
+    // create grass instance
     GrassInstance gi;
     gi.pos    = pos;
     gi.yaw    = yaw;
@@ -175,5 +185,7 @@ void main() {
     gi.phase  = phase;
     gi._pad1  = 0.0f;
 
-    instances[gid] = gi;
+    // reserve slot and write
+    uint idx = atomicAdd(instanceCount, 1u);
+    instances[idx] = gi;
 }

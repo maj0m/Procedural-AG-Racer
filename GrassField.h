@@ -8,26 +8,27 @@
 
 
 struct GrassInstance {
-    // Packed to 32 bytes (nice for GPU)
-    vec3 pos;     // world position (x,y,z)
-    float yaw;    // rotation around Y in radians
-    float height; // blade height multiplier
-    float width;  // blade width multiplier
-    float phase;  // wind sway desync
+    // 32 bytes
+    vec3 pos;     // world pos
+    float yaw;    // rotation around Y
+    float height; // blade height
+    float width;  // blade width
+    float phase;  // wind sway
     float _pad1;
 };
 
 class GrassField {
 public:
     GLuint vao = 0, bladeVBO = 0, instanceVBO = 0;
-    size_t instanceCount = 0;
+    size_t instanceCount = 0;   // final instance count after compute shader
+    size_t capacity = 0;        // max attempts / capacity passed to compute shader
     Shader* shader = new GrassShader();
     vec3 color = vec3(0.4, 0.65, 0.34);
     Material* grassMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
-    GrassScatterComputeShader g_scatterCS;
+    GrassScatterComputeShader scatterComputeShader;
 
-    GrassField(size_t count, vec3 chunkId, float chunkSize) {
-        instanceCount = count;
+    GrassField(size_t maxCount, vec3 chunkId, float chunkSize) {
+        capacity = maxCount;
 
         // Base triangle
         const float bladeVerts[3 * 3] = {
@@ -47,48 +48,60 @@ public:
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-        // Instance buffer (GPU-filled)
+        // Instance buffer (SSBO + VBO in the same GL buffer)
         glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(GrassInstance), nullptr, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, instanceVBO);
 
-        // Bind the SAME buffer as an SSBO at binding=1 for the compute shader to write into
+        // Header + Payload
+        const GLsizeiptr headerSize = 16; // 4 uints = 16 bytes
+        const GLsizeiptr bufferSize = headerSize + GLsizeiptr(capacity) * sizeof(GrassInstance);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+
+        // Zero the atomic counter at offset 0
+        GLuint zero = 0;
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &zero);
+
+        // Bind SSBO at binding = 1 for compute shader to write
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, instanceVBO);
 
         int seed = 12345;
 
-        // Dispatch compute to fill instances (writes pos.xz, yaw, height, width, phase)
-        g_scatterCS.Dispatch((GLuint)instanceCount, chunkId, chunkSize, seed);
+        // Dispatch
+        scatterComputeShader.Dispatch((GLuint)capacity, chunkId, chunkSize, seed);
 
-        // Define vertex attribs from this buffer,
+        // Ensure writes are visible before reading count / using as vertex source
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+        // Read back instanceCount
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &instanceCount);
+
+        // Vertex attributes
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-
-        // Per-instance attributes
         const GLsizei stride = sizeof(GrassInstance);
 
         // layout(location=1) = vec3 iPos
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(GrassInstance, pos));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, pos)));
         glVertexAttribDivisor(1, 1);
 
         // layout(location=2) = float iYaw
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(GrassInstance, yaw));
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, yaw)));
         glVertexAttribDivisor(2, 1);
 
         // layout(location=3) = float iHeight
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(GrassInstance, height));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, height)));
         glVertexAttribDivisor(3, 1);
 
         // layout(location=4) = float iWidth
         glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(GrassInstance, width));
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, width)));
         glVertexAttribDivisor(4, 1);
 
         // layout(location=5) = float iPhase
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(GrassInstance, phase));
+        glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, phase)));
         glVertexAttribDivisor(5, 1);
 
         glBindVertexArray(0);

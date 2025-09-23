@@ -71,10 +71,6 @@ public:
         if(KEYDOWN_E) grassField->destroy();
     }
 
-    void ReloadGrassField(u_int lod) {
-        // TODO
-    }
-
     Chunk(const Chunk&) = delete;
     Chunk& operator=(const Chunk&) = delete;
 };

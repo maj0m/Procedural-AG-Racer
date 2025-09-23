@@ -5,11 +5,9 @@
 #include "material.h"
 #include "renderstate.h"
 #include "light.h"
-#include "material.h"
-#include "chunk.h"
 #include "chunkmanager.h"
 #include <iostream>
-#include "sphere.h"
+
 class Scene {
 	float lastFrameTime = 0.0;
 	RenderState state;
@@ -77,7 +75,7 @@ public:
 		terrainData.frequencyMultiplier = 2.0f;
 		terrainData.amplitude = 130.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
-		terrainData.floorLevel = 20.0f;
+		terrainData.floorLevel = 10.0f;
 		terrainData.blendFactor = 100.0f;
 		chunkManager->setTerrainData(terrainData);
 	}
