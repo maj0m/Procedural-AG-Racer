@@ -6,10 +6,10 @@ class SphereGeometry : public Geometry {
 public:
 
     SphereGeometry() {
-        create(10, 1);
+        create(32, 0.0);
     }
 
-    float SDF(vec3 pos) {
-        return length(pos) - 10.0;
+    float SDF(vec3 p) {
+        return length(p) - 10.0;
     }
 };

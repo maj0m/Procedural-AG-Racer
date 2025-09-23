@@ -12,7 +12,6 @@
 class Chunk {
 protected:
     vec3 id;
-    vec3 color = vec3(0.7, 0.25, 0.14);
     Shader* shader;
     Material* material;
     unsigned int vbo = 0;
@@ -67,8 +66,6 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
 
         grassField->Draw(state);
-        // Debug
-        if(KEYDOWN_E) grassField->destroy();
     }
 
     Chunk(const Chunk&) = delete;

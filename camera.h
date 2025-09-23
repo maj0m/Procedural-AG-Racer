@@ -19,7 +19,7 @@ private:
 
 public:
     Camera() {
-        wEye = vec3(0.0, 30.0, 200.0);
+        wEye = vec3(0.0, 30.0, 0.0);
         wFront = vec3(0.0, 0.0, -1.0);
         wUp = vec3(0.0, 1.0, 0.0);
         asp = (float)WINDOW_WIDTH / WINDOW_HEIGHT;

@@ -33,7 +33,7 @@ public:
 
     void create(int N, float isolevel) {
         std::vector<VertexData> vtxData;
-        float min = 1.5f;
+        float min = 100.0f;
         float xmin = -min, xmax = min;
         float ymin = -min, ymax = min;
         float zmin = -min, zmax = min;

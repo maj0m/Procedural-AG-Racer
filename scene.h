@@ -2,7 +2,6 @@
 #pragma once
 #include "framework.h"
 #include "camera.h"
-#include "material.h"
 #include "renderstate.h"
 #include "light.h"
 #include "chunkmanager.h"
@@ -57,10 +56,6 @@ public:
 	void Build() {
 		chunkManager = new ChunkManager(200.0f, 5);
 		camera = new Camera();
-
-		Shader* terrainShader = new TerrainShader();
-		Material* terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
-		VolumeComputeShader* volumeComputeShader = new VolumeComputeShader();
 
 		// Lights
 		lights.resize(1);
