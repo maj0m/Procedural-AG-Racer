@@ -4,7 +4,7 @@
 #include "framework.h"
 #include "grassshader.h"
 #include "GrassScatterComputeShader.h"
-
+#include "TrackManager.h"
 
 
 struct GrassInstance {
@@ -23,12 +23,14 @@ public:
     size_t instanceCount = 0;   // final instance count after compute shader
     size_t capacity = 0;        // max attempts / capacity passed to compute shader
     Shader* shader = new GrassShader();
-    vec3 color = vec3(0.4, 0.65, 0.34);
     Material* grassMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
     GrassScatterComputeShader scatterComputeShader;
 
-    GrassField(size_t maxCount, vec3 chunkId, float chunkSize) {
+
+    GrassField(size_t maxCount, vec3 chunkId, float chunkSize, int segIndexCount) {
         capacity = maxCount;
+        
+
 
         // Base triangle
         const float bladeVerts[3 * 3] = {
@@ -63,17 +65,15 @@ public:
 
         // Bind SSBO at binding = 1 for compute shader to write
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, instanceVBO);
-
-        int seed = 12345;
-
+        
         // Dispatch
-        scatterComputeShader.Dispatch((GLuint)capacity, chunkId, chunkSize, seed);
+        scatterComputeShader.Dispatch((GLuint)capacity, chunkId, chunkSize, segIndexCount);
 
         // Ensure writes are visible before reading count / using as vertex source
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         // Read back instanceCount
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &instanceCount);
+        glGetNamedBufferSubData(instanceVBO, 0, sizeof(GLuint), &instanceCount);
 
         // Vertex attributes
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
@@ -113,14 +113,10 @@ public:
         state.MVP = state.M * state.V * state.P;
         state.material = grassMaterial;
 
-        // save state
+        // save previous state
         GLint prevVAO = 0, prevProgram = 0;
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prevVAO);
         glGetIntegerv(GL_CURRENT_PROGRAM, &prevProgram);
-
-        // save SSBO binding(0)
-        GLint prevSSBO0 = 0;
-        glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, 0, &prevSSBO0);
 
         // set uniforms & draw
         shader->Bind(state);
@@ -130,7 +126,6 @@ public:
         // restore state
         glBindVertexArray(prevVAO);
         glUseProgram(prevProgram);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, prevSSBO0);
     }
 
     void destroy() {

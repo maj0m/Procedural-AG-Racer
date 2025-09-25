@@ -6,7 +6,7 @@ class SphereGeometry : public Geometry {
 public:
 
     SphereGeometry() {
-        create(32, 0.0);
+        create(10, 0.0);
     }
 
     float SDF(vec3 p) {

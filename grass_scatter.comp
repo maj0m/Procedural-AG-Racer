@@ -12,6 +12,11 @@ struct GrassInstance {
     float _pad1;
 };
 
+struct TrackSegment {
+    vec4 start_r; // start.xyz, radius in .w
+    vec4 end_pad; // end.xyz, unused in .w
+};
+
 layout(std430, binding = 1) buffer GrassOut {
     // 16 byte header (std430)
     uint instanceCount;  // atomic counter (number of VALID grass blades)
@@ -33,11 +38,20 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_blendFactor;
 };
 
+layout(std430, binding=4) readonly buffer TrackSegBuf {
+    TrackSegment segments[];
+};
+
+layout(std430, binding=5) readonly buffer TrackIdxBuf {
+    uint segIndices[];
+};
+
 // Uniforms
 uniform int  u_instanceCount;
+uniform int  u_segIndexCount;
 uniform vec3  u_chunkId;
 uniform float u_chunkSize;
-uniform uint  u_seed;
+
 
 // Tiny RNG (u32 hash)
 uint hash_u32(uint x) {
@@ -138,6 +152,28 @@ bool isUnderground(vec3 pos) {
     return false;
 }
 
+// distance from p to capsule along AB with radius r
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+    vec3 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    float d = length(pa - ba * h) - r;
+    return d; // < 0 => inside
+}
+
+bool insideTrack(vec3 p) {
+    if(u_segIndexCount == 0) return false;
+
+    // small, per-chunk loop
+    for (uint k = 0; k < u_segIndexCount; ++k) {
+        uint idx = segIndices[k];
+        vec3 a = segments[idx].start_r.xyz;
+        float r = segments[idx].start_r.w;
+        vec3 b = segments[idx].end_pad.xyz;
+        if (sdCapsule(p, a, b, r) < 0.0) return true;
+    }
+    return false;
+}
+
 
 void main() {
     uint gid = gl_GlobalInvocationID.x;
@@ -150,11 +186,9 @@ void main() {
 
     float cellSize = u_chunkSize / float(side);
 
-    uint s = u_seed ^ gid;
-
     // jitter in [-0.5*cell, +0.5*cell]
-    float jx = (rand01(s) - 0.5f) * cellSize;
-    float jz = (rand01(s) - 0.5f) * cellSize;
+    float jx = (rand01(gid) - 0.5f) * cellSize;
+    float jz = (rand01(gid) - 0.5f) * cellSize;
 
     // cell center inside the chunk
     float baseX = (float(ix) + 0.5f) * cellSize;
@@ -168,12 +202,13 @@ void main() {
 
     // skip writing if blade is underground
     if (isUnderground(pos)) { return; }
+    if (insideTrack(pos)) { return; }
 
     // other params
-    float yaw    = rand01(s) * (2.0f * PI);
-    float height = mix(3.75f, 4.35f, rand01(s));
-    float width  = mix(1.60f, 2.20f, rand01(s));
-    float phase  = rand01(s) * (2.0f * PI);
+    float yaw    = rand01(gid) * (2.0f * PI);
+    float height = mix(3.75f, 4.35f, rand01(gid));
+    float width  = mix(1.60f, 2.20f, rand01(gid));
+    float phase  = rand01(gid) * (2.0f * PI);
 
 
     // create grass instance

@@ -5,6 +5,7 @@ struct Light {
 	vec4 wLightPos;
 };
 
+// Passed from grass_scatter.comp
 layout (location=0) in vec3 aPos;     // (0,0,0), (1,0,0), (0,1,0)
 layout (location=1) in vec3 iPos;     // world position per blade
 layout (location=2) in float iYaw;    // yaw (radians)

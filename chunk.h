@@ -20,12 +20,24 @@ protected:
     unsigned int maxVertices;
     GLuint actualVertexCount;
     GrassField* grassField;
+    GLuint segIndexSSBO = 0;     // binding = 5
+    GLuint segIndexCount = 0;    // small number per chunk
 
 public:
-    Chunk(vec3 id, float chunkSize, Shader* shader, Material* material, VolumeComputeShader* computeShader)
+    Chunk(vec3 id, float chunkSize, Shader* shader, Material* material, VolumeComputeShader* computeShader, TrackManager* trackManager)
         : id(id), chunkSize(chunkSize), shader(shader), material(material) {
 
-        grassField = new GrassField(32000, id, chunkSize);
+        // Build per-chunk list of road segments
+        std::vector<int> indices;
+        trackManager->GetSegmentsForChunk(id, chunkSize, indices);
+        segIndexCount = (GLuint)indices.size();
+
+        glGenBuffers(1, &segIndexSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, segIndexSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * segIndexCount, indices.data(), GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, segIndexSSBO);
+
+        grassField = new GrassField(32000, id, chunkSize, segIndexCount);
 
         maxVertices = tesselation * tesselation * tesselation * 15;
         const GLsizeiptr headerSize = 16;
@@ -44,14 +56,15 @@ public:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
 
         // Dispatch
-        computeShader->Dispatch(tesselation / 8, tesselation / 8, tesselation / 8, id, chunkSize, tesselation);
+        computeShader->Dispatch(tesselation / 8, tesselation / 8, tesselation / 8, id, chunkSize, tesselation, segIndexCount);
         
         // Retrieve actual vertex count
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &actualVertexCount);
+        glGetNamedBufferSubData(vbo, 0, sizeof(GLuint), &actualVertexCount);
     }
 
     ~Chunk() {
         if (vbo) glDeleteBuffers(1, &vbo);
+        if (segIndexSSBO) glDeleteBuffers(1, &segIndexSSBO);
         grassField->destroy();
     }
 

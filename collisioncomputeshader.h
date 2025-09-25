@@ -1,7 +1,6 @@
 #pragma once
 #include "computeshader.h"
 #include <iostream>
-#include "terraindata.h"
 
 class CollisionComputeShader : public ComputeShader {
     GLuint collisionBuffer;
@@ -19,16 +18,10 @@ public:
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(CollisionData), NULL, GL_DYNAMIC_DRAW);
     }
 
-    void Dispatch(vec3 pos, float& groundDist, vec3& normal, TerrainData data) {
+    void Dispatch(vec3 pos, float& groundDist, vec3& normal) {
         glUseProgram(getId());
 
         setUniform(pos, "pos");
-        setUniform(data.frequency, "u_frequency");
-        setUniform(data.frequencyMultiplier, "u_frequencyMultiplier");
-        setUniform(data.amplitude, "u_amplitude");
-        setUniform(data.amplitudeMultiplier, "u_amplitudeMultiplier");
-        setUniform(data.floorLevel, "u_floorLevel");
-        setUniform(data.blendFactor, "u_blendFactor");
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, collisionBuffer);
         glDispatchCompute(1, 1, 1);

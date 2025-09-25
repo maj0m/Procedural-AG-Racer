@@ -107,6 +107,8 @@ inline vec3 max3(const vec3& a, const vec3& b) { return vec3(max(a.x, b.x), max(
 inline vec3 normalize(const vec3& v) { return v * (1 / length(v)); }
 inline vec3 cross(const vec3& v1, const vec3& v2) {	return vec3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x); }
 inline vec3 operator*(float a, const vec3& v) { return vec3(v.x * a, v.y * a, v.z * a); }
+inline vec3 minVec3(const vec3& v1, const vec3& v2) { return (vec3(min(v1.x, v2.x), min(v1.y, v2.y), min(v1.z, v2.z))); }
+inline vec3 maxVec3(const vec3& v1, const vec3& v2) { return (vec3(max(v1.x, v2.x), max(v1.y, v2.y), max(v1.z, v2.z))); }
 
 struct Vec3Hash {
 	size_t operator()(const vec3& v) const {

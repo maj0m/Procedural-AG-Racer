@@ -2,6 +2,11 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
+struct TrackSegment {
+    vec4 start_r; // start.xyz, radius in .w
+    vec4 end_pad; // end.xyz, unused in .w
+};
+
 layout(std430, binding = 0) buffer VertexBuffer {
     uint vertexCount;   // counts vertices written (multiple of 3)
     uint _pad0;         // pad to 16 bytes for std430 alignment
@@ -21,9 +26,19 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_blendFactor;
 };
 
+layout(std430, binding=4) readonly buffer TrackSegBuf {
+    TrackSegment segments[];
+};
+
+layout(std430, binding=5) readonly buffer TrackIdxBuf {
+    uint segIndices[];
+};
+
+
 uniform vec3 chunkID;
 uniform float chunkSize;
 uniform int tesselation;
+uniform int u_segIndexCount;
 uniform isampler2D edgeTableTex;
 uniform isampler2D triTableTex;
 
@@ -81,6 +96,28 @@ float simplex3d(vec3 p) {
 	 return dot(d, vec4(52.0));
 }
 
+// distance from p to capsule along AB with radius r
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+    vec3 pa = p - a, ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    float d = length(pa - ba * h) - r;
+    return d; // < 0 => inside
+}
+
+bool insideTrack(vec3 p) {
+    if(u_segIndexCount == 0) return false;
+
+    // small, per-chunk loop
+    for (uint k = 0; k < u_segIndexCount; ++k) {
+        uint idx = segIndices[k];
+        vec3 a = segments[idx].start_r.xyz;
+        float r = segments[idx].start_r.w;
+        vec3 b = segments[idx].end_pad.xyz;
+        if (sdCapsule(p, a, b, r) < 0.0) return true;
+    }
+    return false;
+}
+
 float cubeVal(int cornerIdx) {
     vec3 pos = vec3(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y, gl_GlobalInvocationID.z) + corners[cornerIdx].xyz;
     pos *= chunkSize / float(tesselation);
@@ -98,6 +135,8 @@ float cubeVal(int cornerIdx) {
     }
 
     float bedrockDensity = -pos.y + noise + u_floorLevel;
+
+    if(insideTrack((pos))) return bedrockDensity;
 
     // Hills and Features
     //float warpScale = 0.001;

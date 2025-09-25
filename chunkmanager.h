@@ -8,7 +8,7 @@
 #include "object.h"
 #include "plane.h"
 #include "terrainshader.h"
-
+#include "TrackManager.h"
 
 class ChunkManager {
 private:
@@ -20,13 +20,17 @@ private:
     unsigned int chunkSize;
     int renderDistance;
     GLuint vao = 0;         // Shared VAO for all chunks
-    GLuint terrainUBO = 0;  // Terrain UBO that any shaders can access
+    GLuint terrainUBO = 0;  // Terrain UBO that any shader can access
+    TrackManager* trackManager;
 
 public:
-    ChunkManager(float chunkSize, int renderDistance) : chunkSize(chunkSize), renderDistance(renderDistance) {
+    ChunkManager(float chunkSize, int renderDistance, TerrainData terrainData) : chunkSize(chunkSize), renderDistance(renderDistance), terrainData(terrainData) {
+        
+
         terrainShader = new TerrainShader();
         volumeComputeShader = new VolumeComputeShader();
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
+        trackManager = new TrackManager();
 
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
@@ -39,7 +43,6 @@ public:
         glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 8, nullptr, GL_DYNAMIC_DRAW);
         glBindBufferRange(GL_UNIFORM_BUFFER, 3, terrainUBO, 0, sizeof(float) * 8);
 
-        // initialize UBO with current terrainData
         updateTerrainUBO();
     }
 
@@ -53,7 +56,7 @@ public:
 
     void LoadChunk(const vec3& id) {
         if (chunkMap.find(id) == chunkMap.end()) {
-            chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, terrainShader, terrainMaterial, volumeComputeShader));
+            chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
         }
     }
 
@@ -148,8 +151,6 @@ public:
                 pair.second->Draw(state);
             }
         }
-
-        //printf("Drawning %i / %i chunks\n", drawnChunks, totalChunks);
     }
 
     void updateTerrainUBO() {

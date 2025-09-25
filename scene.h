@@ -54,7 +54,6 @@ public:
 
 
 	void Build() {
-		chunkManager = new ChunkManager(200.0f, 5);
 		camera = new Camera();
 
 		// Lights
@@ -72,7 +71,8 @@ public:
 		terrainData.amplitudeMultiplier = 0.45f;
 		terrainData.floorLevel = 10.0f;
 		terrainData.blendFactor = 100.0f;
-		chunkManager->setTerrainData(terrainData);
+
+		chunkManager = new ChunkManager(200.0f, 5, terrainData);
 	}
 
 

@@ -21,7 +21,6 @@ public:
 	}
 
 	void Draw(RenderState state) {
-		// printf("%f, %f, %f\n", pos.x, pos.y, pos.z);
 		mat4 rotationMatrix = rotation.toRotationMatrix();
 		mat4 M = ScaleMatrix(scale) * rotationMatrix * TranslateMatrix(pos);
 
