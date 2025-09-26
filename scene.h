@@ -86,29 +86,25 @@ public:
 		ImGui::SetNextWindowSize(ImVec2(w, h));
 		ImGui::Begin("Settings");
 
-		// Display FPS and Coordinates
+		// FPS and Coordinates
 		getFPS(fps);
 		ImGui::Text("FPS: %d", fps);
 		ImGui::Text("X: %.1f, Y: %.1f, Z: %.1f", camera->getEyePos().x, camera->getEyePos().y, camera->getEyePos().z);
-		
-		// Bedrock Frequency
+
+		// Color Palette
+		if (palette) {
+			if (palette->DrawImGui("Colors")) {}
+		}
+
+		// Terrain Params
+		ImGui::SeparatorText("Terrain Params");
 		ImGui::SliderFloat("Bedrock Frequency", &terrainData.bedrockFrequency, 0.001f, 0.1f);
-
-		// Bedrock Amplitude
 		ImGui::SliderFloat("Bedrock Amplitude", &terrainData.bedrockAmplitude, 0.01f, 50.0f);
-
-		// Terrain Frequency
 		ImGui::SliderFloat("Frequency", &terrainData.frequency, 0.001f, 0.1f);
 		ImGui::SliderFloat("Frequency Multiplier", &terrainData.frequencyMultiplier, 1.0f, 3.0f);
-
-		// Terrain Amplitude
 		ImGui::SliderFloat("Amplitude", &terrainData.amplitude, 0.01f, 256.0f);
 		ImGui::SliderFloat("Amplitude Multiplier", &terrainData.amplitudeMultiplier, 0.1f, 1.0f);
-
-		// Terrain Floor Level
 		ImGui::SliderFloat("Floor Level", &terrainData.floorLevel, -50.0f, 50.0f);
-
-		// Terrain Blend Factor
 		ImGui::SliderFloat("Blend Factor", &terrainData.blendFactor, 0.0f, 100.0f);
 
 		if (ImGui::Button("Reload Chunks")) {
@@ -120,7 +116,7 @@ public:
 	}
 
 	void rotateCamera(float x, float y) {
-		camera->rotate(x, y);
+		if (x < WINDOW_WIDTH - GUI_WIDTH) camera->rotate(x, y);
 	}
 
 	void setCameraFirstMouse() {

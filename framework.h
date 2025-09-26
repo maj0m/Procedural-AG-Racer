@@ -147,6 +147,21 @@ inline vec4 operator*(float a, const vec4& v) {
 	return vec4(v.x * a, v.y * a, v.z * a, v.w * a);
 }
 
+inline vec4 HexRGB(uint32_t rgb) {
+	float r = float((rgb >> 16) & 0xFF) / 255.0f;
+	float g = float((rgb >> 8) & 0xFF) / 255.0f;
+	float b = float((rgb >> 0) & 0xFF) / 255.0f;
+	return vec4(r, g, b, 1.0f);
+}
+
+inline vec4 HexRGBA(uint32_t rgba) {
+	float r = float((rgba >> 24) & 0xFF) / 255.0f;
+	float g = float((rgba >> 16) & 0xFF) / 255.0f;
+	float b = float((rgba >> 8) & 0xFF) / 255.0f;
+	float a = float((rgba >> 0) & 0xFF) / 255.0f;
+	return vec4(r, g, b, a);
+}
+
 struct mat4 { // row-major matrix 4x4
 	vec4 rows[4];
 public:

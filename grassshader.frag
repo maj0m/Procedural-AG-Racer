@@ -36,7 +36,7 @@ void main() {
 	vec3 V = normalize(wView);
 	
 	// Green with variation from vShade
-    vec3 texColor = vec3(0.18, 0.45, 0.16) +  vShade * 0.25;
+    vec3 texColor = grassColor.xyz + vShade * 0.25;
 
 	vec3 ka = material.ka * texColor;
 	vec3 kd = material.kd * texColor;
