@@ -129,11 +129,7 @@ float cubeVal(vec3 pos) {
 
 bool isUnderground(vec3 pos) {
     
-    // Hills and Features
-//    float warpScale = 0.005;
-//    vec3 warp = vec3(simplex3d(pos * warpScale), simplex3d(pos * warpScale), simplex3d(pos * warpScale));
-//    pos += warp * 40;
-    
+    // Hills and Features  
     if(pos.y <2.0) return true;
 
     float noise = 0.0;
@@ -200,9 +196,11 @@ void main() {
     float wy = cubeVal(vec3(wx, 0.0, wz)); // sample bedrock height
     vec3 pos = vec3(wx, wy, wz);
 
-    // skip writing if blade is underground
+    // skip writing if blade is underground or inside the track
     if (isUnderground(pos)) { return; }
-    if (insideTrack(pos)) { return; }
+
+    float jitterScale = 40.0;
+    if (insideTrack(vec3(pos.x + simplex3d(pos)*jitterScale, pos.y, pos.z + simplex3d(pos)*jitterScale))) { return; }
 
     // other params
     float yaw    = rand01(gid) * (2.0f * PI);

@@ -31,19 +31,19 @@ static void getFPS(int& fps) {
 	}
 }
 
+// RNG (deterministic)
+static std::mt19937 rng(0xC0FFFEu);
+auto randf = [&](float a, float b) {
+	std::uniform_real_distribution<float> d(a, b);
+	return d(rng);
+	};
+
 void clamp(float& x, float min_value, float max_value) {
 	x = min(max_value, max(x, min_value));
 }
 
 float radians(float degrees) {
 	return degrees * M_PI / 180.0;
-}
-
-float random(float min, float max) {
-	static std::random_device rd;
-	static std::mt19937 rng(rd());
-	static std::uniform_real_distribution<float> dist(min, max);
-	return dist(rng);
 }
 
 template <typename T>
@@ -74,6 +74,7 @@ struct vec2 {
 };
 
 inline float dot(const vec2& v1, const vec2& v2) { return (v1.x * v2.x + v1.y * v2.y); }
+inline float cross(const vec2& a, const vec2& b) { return a.x * b.y - a.y * b.x; };
 inline float length(const vec2& v) { return sqrtf(dot(v, v)); }
 inline vec2 normalize(const vec2& v) { return v * (1 / length(v)); }
 inline vec2 abs(const vec2& v) { return vec2(abs(v.x), abs(v.y)); }

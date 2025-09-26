@@ -70,7 +70,7 @@ public:
 		terrainData.amplitude = 130.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
 		terrainData.floorLevel = 10.0f;
-		terrainData.blendFactor = 100.0f;
+		terrainData.blendFactor = 25.0f;
 
 		chunkManager = new ChunkManager(200.0f, 5, terrainData);
 	}
@@ -105,7 +105,7 @@ public:
 		ImGui::SliderFloat("Floor Level", &terrainData.floorLevel, -50.0f, 50.0f);
 
 		// Terrain Blend Factor
-		ImGui::SliderFloat("Blend Factor", &terrainData.blendFactor, 0.0f, 200.0f);
+		ImGui::SliderFloat("Blend Factor", &terrainData.blendFactor, 0.0f, 100.0f);
 
 		if (ImGui::Button("Reload Chunks")) {
 			chunkManager->setTerrainData(terrainData);

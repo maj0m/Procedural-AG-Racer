@@ -22,11 +22,9 @@ in vec3 vtxPos;
 
 out vec4 fragmentColor;				// output goes to frame buffer
 
-
-
 void main() {
-	vec3 xTangent = dFdx(wView);
-	vec3 yTangent = dFdy(wView);
+	vec3 xTangent = dFdx(vtxPos);
+	vec3 yTangent = dFdy(vtxPos);
 	vec3 N = normalize(cross(xTangent, yTangent)); // Surface normal
 	vec3 V = normalize(wView);
 
@@ -36,9 +34,9 @@ void main() {
 
 	vec3 texColor;
 	float angleTreshold1 = 15.0;
-	float angleTreshold2 = 30.0;
-	float angleTreshold3 = 45.0;
-	float angleTreshold4 = 180.0;
+	float angleTreshold2 = 40.0;
+	float angleTreshold3 = 120.0;
+	float angleTreshold4 = 240.0;
 
 	// Define the colors for each range
 	vec3 colorA = vec3(228, 213, 211) / 255.0;

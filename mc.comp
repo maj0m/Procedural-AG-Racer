@@ -34,7 +34,6 @@ layout(std430, binding=5) readonly buffer TrackIdxBuf {
     uint segIndices[];
 };
 
-
 uniform vec3 chunkID;
 uniform float chunkSize;
 uniform int tesselation;
@@ -96,26 +95,31 @@ float simplex3d(vec3 p) {
 	 return dot(d, vec4(52.0));
 }
 
-// distance from p to capsule along AB with radius r
+// distance from p to capsule along AB with radius r (source: https://iquilezles.org/articles/distfunctions/)
 float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
     vec3 pa = p - a, ba = b - a;
     float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
     float d = length(pa - ba * h) - r;
-    return d; // < 0 => inside
+    return d; // <0 inside capsule
 }
 
-bool insideTrack(vec3 p) {
-    if(u_segIndexCount == 0) return false;
+// soft mask: 0 inside road, 1 outside, smooth with u_blendFactor
+float insideTrack(vec3 p) {
+    if (u_segIndexCount == 0) return 1.0;
 
-    // small, per-chunk loop
+    float w = 1.0;
+    // Combine influence of segments with min()
     for (uint k = 0; k < u_segIndexCount; ++k) {
         uint idx = segIndices[k];
         vec3 a = segments[idx].start_r.xyz;
         float r = segments[idx].start_r.w;
         vec3 b = segments[idx].end_pad.xyz;
-        if (sdCapsule(p, a, b, r) < 0.0) return true;
+
+        float d = sdCapsule(p, a, b, r); // <0 inside capsule
+        float wSeg = smoothstep(-u_blendFactor, +u_blendFactor, d);
+        w = min(w, wSeg);
     }
-    return false;
+    return w;
 }
 
 float cubeVal(int cornerIdx) {
@@ -136,14 +140,7 @@ float cubeVal(int cornerIdx) {
 
     float bedrockDensity = -pos.y + noise + u_floorLevel;
 
-    if(insideTrack((pos))) return bedrockDensity;
-
     // Hills and Features
-    //float warpScale = 0.001;
-    //vec3 warp = vec3(simplex3d(pos * warpScale), simplex3d(pos * warpScale), simplex3d(pos * warpScale));
-    //pos += warp * 100;
-
-
     noise = 0.0;
     frequency = u_frequency;
     amplitude = u_amplitude;
@@ -154,12 +151,16 @@ float cubeVal(int cornerIdx) {
         amplitude *= u_amplitudeMultiplier;
     }
 
-    float terrainDensity = -pos.y + noise + u_floorLevel;
+    float terrainDensity = -pos.y + noise;
 
     // Combined terrain
+    float blendedTerrain = max(terrainDensity, bedrockDensity);
 
-    float blendedDensity = max(terrainDensity, bedrockDensity);
-    return blendedDensity;
+    // Road soft mask 
+    float w = insideTrack(pos); // 0 inside road, 1 outside
+    float finalDensity = mix(bedrockDensity, blendedTerrain, w);
+
+    return finalDensity;
 }
 
 vec3 cubePos(int cornerIdx) {
@@ -190,7 +191,6 @@ void main() {
     float cubeVal6 = cubeVal(6);
     float cubeVal7 = cubeVal(7);
 
-
     int cubeindex=0;
     cubeindex += int(cubeVal0 < isolevel);
     cubeindex += int(cubeVal1 < isolevel)*2;
@@ -200,9 +200,7 @@ void main() {
     cubeindex += int(cubeVal5 < isolevel)*32;
     cubeindex += int(cubeVal6 < isolevel)*64;
     cubeindex += int(cubeVal7 < isolevel)*128;
-
-    if (cubeindex ==0 || cubeindex == 255)
-    return;
+    if (cubeindex ==0 || cubeindex == 255) return;
 
     vec3 vertlist[12];
     vertlist[0] = vertexInterp(isolevel, cubePos(0), cubeVal0, cubePos(1), cubeVal1);
@@ -219,7 +217,6 @@ void main() {
     vertlist[11] = vertexInterp(isolevel, cubePos(3), cubeVal3, cubePos(7), cubeVal7);
 
     int i=0;
-
      while (true) {
         int t0 = triTableValue(cubeindex, i+0);
         if (t0 == -1) break;
@@ -233,7 +230,6 @@ void main() {
         vertices[base + 0u] = vec4(vertlist[t0], 1.0);
         vertices[base + 1u] = vec4(vertlist[t1], 1.0);
         vertices[base + 2u] = vec4(vertlist[t2], 1.0);
-
 
         i += 3;
     }

@@ -30,8 +30,6 @@ public:
     GrassField(size_t maxCount, vec3 chunkId, float chunkSize, int segIndexCount) {
         capacity = maxCount;
         
-
-
         // Base triangle
         const float bladeVerts[3 * 3] = {
             0.0f, 0.0f, 0.0f,   // base left
