@@ -2,18 +2,18 @@
 #include "framework.h"
 #include "shader.h"
 #include "renderstate.h"
-#include "light.h"
 
-class TerrainShader : public Shader {
+class WaterShader : public Shader {
 
 public:
-	TerrainShader() {
-		create("terrainshader.vert", "terrainshader.frag", "fragmentColor");
+	WaterShader() {
+		create("watershader.vert", "watershader.frag", "fragmentColor");
 	}
 
 	void Bind(RenderState state) {
 		Use();
 
+		setUniform(state.time, "u_time");
 		setUniform(state.MVP, "MVP");
 		setUniform(state.M, "M");
 		setUniform(state.wEye, "wEye");

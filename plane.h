@@ -2,16 +2,20 @@
 #include "geometry.h"
 
 class PlaneGeometry : public Geometry {
-
+    float scale;
+    int tesselation;
 public:
 
-    PlaneGeometry() {
-        create(1, 1);
+
+    PlaneGeometry(int _tesselation, float _scale) {
+        scale = _scale;
+        tesselation = _tesselation;
+        create(tesselation, tesselation);
     }
 
     void eval(float u, float v, vec3& pos) {
-        float U = (u-0.5) * 512;
-        float V = (v-0.5) * 512;
+        float U = (u - 0.5f) * scale;
+        float V = (v - 0.5f) * scale;
 
         pos = vec3(U, 0, V);
     }

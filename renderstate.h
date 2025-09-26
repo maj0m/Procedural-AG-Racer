@@ -10,5 +10,5 @@ struct RenderState {
 	vec3 wUp;
 	mat4 MVP, M, V, P;
 	Material* material;
-	std::vector<Light> lights;
+	Light light;
 };

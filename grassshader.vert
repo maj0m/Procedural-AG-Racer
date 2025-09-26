@@ -2,7 +2,7 @@
 
 struct Light {
 	vec3 La, Le;
-	vec4 wLightPos;
+	vec3 dir;
 };
 
 // Passed from grass_scatter.comp
@@ -15,13 +15,10 @@ layout (location=5) in float iPhase;  // sway phase
 
 uniform float u_time;
 uniform mat4 MVP, M;					// MVP, Model
-uniform Light[8] lights;				// Light sources 
-uniform int nLights;
 uniform vec3 wEye;						// Eye position
 
 out float vShade;                       // tiny variation for fragment	
 out vec3 wView;							// view in world space
-out vec3 wLight[8];						// light dir in world space
 out float wDist;						// distance from camera
 
 float u_windStrength = 1.0;  // meters of lateral tip deflection
@@ -54,10 +51,6 @@ void main() {
 
     // Translate to world position
     vec3 worldPos = iPos + p;
-
-    for(int i = 0; i < nLights; i++) {
-	    wLight[i] = lights[i].wLightPos.xyz - worldPos * lights[i].wLightPos.w;
-	}
     wView  = wEye - worldPos;
 	wDist = length(wView);
 

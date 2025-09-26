@@ -10,8 +10,7 @@ struct TrackSegment {
 class TrackManager {
 public:
 	std::vector<TrackSegment> segments;
-
-	GLuint segmentsSSBO = 0;   // binding = 4 (example)
+	GLuint segmentsSSBO = 0;   // binding = 4
 	GLuint segmentCount = 0;
 
 	// Only create after TerrainData UBO is uploaded!! (if using collision compute shader)
@@ -112,7 +111,7 @@ public:
                 0.5f * ((2 * P0.x) + (-Pm1.x + P1.x) * t + (2 * Pm1.x - 5 * P0.x + 4 * P1.x - P2.x) * t2 + (-Pm1.x + 3 * P0.x - 3 * P1.x + P2.x) * t3),
                 0.5f * ((2 * P0.y) + (-Pm1.y + P1.y) * t + (2 * Pm1.y - 5 * P0.y + 4 * P1.y - P2.y) * t2 + (-Pm1.y + 3 * P0.y - 3 * P1.y + P2.y) * t3)
             );
-            };
+        };
 
         std::vector<vec3> path;
         path.reserve(N * (CATMULL_SEGMENTS + 1));

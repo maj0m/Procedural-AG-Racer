@@ -17,9 +17,6 @@ public:
 		setUniform(state.MVP, "MVP");
 		setUniform(state.wEye, "wEye");
 		setUniformMaterial(*state.material, "material");
-		setUniform((int)state.lights.size(), "nLights");
-		for (unsigned int i = 0; i < state.lights.size(); i++) {
-			setUniformLight(state.lights[i], std::string("lights[") + std::to_string(i) + std::string("]"));
-		}
+		setUniformLight(state.light, "light");
 	}
 };

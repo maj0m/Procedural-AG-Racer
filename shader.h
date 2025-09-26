@@ -100,7 +100,7 @@ public:
 
 	void setUniform(const vec2& v, const std::string& name) {
 		int location = getLocation(name);
-		if (location >= 0) glUniform2fv(location, 1, &v.x);
+		if (location >= 0) glUniform2fv(location, 1, &v.x); 
 	}
 
 	void setUniform(const vec3& v, const std::string& name) {
@@ -125,10 +125,10 @@ public:
 		setUniform(material.shininess, name + ".shininess");
 	}
 
-	void setUniformLight(const Light& light, const std::string& name) {
-		setUniform(light.La, name + ".La");
-		setUniform(light.Le, name + ".Le");
-		setUniform(light.wLightPos, name + ".wLightPos");
+	void setUniformLight(const Light& L, const std::string& name) {
+		setUniform(L.La, name + ".La");
+		setUniform(L.Le, name + ".Le");
+		setUniform(L.dir, name + ".dir");
 	}
 
 	~Shader() { if (shaderProgramId > 0) glDeleteProgram(shaderProgramId); }

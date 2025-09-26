@@ -110,7 +110,6 @@ float simplex3d(vec3 p) {
 	 return dot(d, vec4(52.0));
 }
 
-
 float cubeVal(vec3 pos) {
    
     // Bedrock

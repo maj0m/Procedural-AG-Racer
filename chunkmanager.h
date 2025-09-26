@@ -9,6 +9,7 @@
 #include "plane.h"
 #include "terrainshader.h"
 #include "TrackManager.h"
+#include "watershader.h"
 
 class ChunkManager {
 private:
@@ -22,15 +23,15 @@ private:
     GLuint vao = 0;         // Shared VAO for all chunks
     GLuint terrainUBO = 0;  // Terrain UBO that any shader can access
     TrackManager* trackManager;
+    Object* water;
 
 public:
     ChunkManager(float chunkSize, int renderDistance, TerrainData terrainData) : chunkSize(chunkSize), renderDistance(renderDistance), terrainData(terrainData) {
-        
-
         terrainShader = new TerrainShader();
         volumeComputeShader = new VolumeComputeShader();
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
         trackManager = new TrackManager();
+        water = new Object(new WaterShader(), new PlaneGeometry(100, chunkSize * ((float)renderDistance * 2.0 + 1.0)));
 
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
@@ -151,6 +152,8 @@ public:
                 pair.second->Draw(state);
             }
         }
+
+        water->Draw(state);
     }
 
     void updateTerrainUBO() {
@@ -177,6 +180,13 @@ public:
 
         glBindBuffer(GL_UNIFORM_BUFFER, terrainUBO);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(p), &p);
+    }
+
+    vec3 getSpawnPoint() {
+        float x = trackManager->segments[0].start_r.x;
+        float y = trackManager->segments[0].start_r.y;
+        float z = trackManager->segments[0].start_r.z;
+        return vec3(x, y, z);
     }
 
 

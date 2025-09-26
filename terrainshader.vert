@@ -3,12 +3,10 @@ precision highp float;
 
 struct Light {
 	vec3 La, Le;
-	vec4 wLightPos;
+	vec3 dir;
 };
 		
 uniform mat4 MVP, M;					// MVP, Model
-uniform Light[8] lights;				// Light sources 
-uniform int nLights;
 uniform vec3 wEye;						// Eye position
 
 layout(std430, binding = 0) buffer VertexBuffer {
@@ -20,7 +18,6 @@ layout(std430, binding = 0) buffer VertexBuffer {
 };
 
 out vec3 wView;							// view in world space
-out vec3 wLight[8];						// light dir in world space
 out float wDist;						// distance from camera
 out vec3 vtxPos;
 
@@ -30,9 +27,6 @@ void main() {
 	gl_Position = vec4(vertexPos, 1) * MVP;			// to NDC
 
 	vec4 wPos = vec4(vertexPos, 1) * M;
-	for(int i = 0; i < nLights; i++) {
-		wLight[i] = lights[i].wLightPos.xyz - wPos.xyz * lights[i].wLightPos.w;
-	}
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
 	vtxPos = vertexPos;

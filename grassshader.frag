@@ -2,7 +2,7 @@
 
 struct Light {
 	vec3 La, Le;
-	vec4 wLightPos;
+	vec3 dir;
 };
 
 struct Material {
@@ -10,13 +10,20 @@ struct Material {
 	float shininess;
 };
 
+layout(std140, binding = 7) uniform ColorPalette {
+    vec4 terrainColors[5];
+    vec4 grassColor;
+    vec4 waterColor;
+    vec4 fogColor;
+    vec4 angleThresholds;
+    float fogDensity;
+};
+
 uniform Material material;
-uniform Light[8] lights;
-uniform int   nLights;
+uniform Light light;
 
 in float vShade;
 in vec3 wView;						// interpolated world sp view
-in vec3 wLight[8];					// interpolated world sp illum dir		
 in float wDist;						// distance from camera
 in vec3 vtxPos;
 
@@ -35,19 +42,17 @@ void main() {
 	vec3 kd = material.kd * texColor;
 	vec3 ks = material.ks;
 
-	vec3 radiance = vec3(0, 0, 0);
-	for(int i = 0; i < nLights; i++) {
-		vec3 L = normalize(wLight[i]);
-		vec3 H = normalize(L + V);
-		float cost = max(dot(N,L), 0);
-		float cosd = max(dot(N,H), 0);
-		radiance += ka * lights[i].La + (kd * cost + ks * lights[i].Le * pow(cosd, material.shininess)) * lights[i].Le;
-	}
+    // Directional light: constant direction
+    vec3 L = normalize(light.dir);      // direction TOWARD surface
+    vec3 H = normalize(L + V);
+    float cost = max(dot(N, L), 0.0);
+    float cosd = max(dot(N, H), 0.0);
 
-	float fogDensity = 0.000002;
-	vec3 fogColor = vec3(0.6, 0.55, 0.45);
+    vec3 radiance = ka * light.La + (kd * cost + ks * pow(cosd, material.shininess)) * light.Le;
+
+
     float fogFactor = exp(-fogDensity * wDist * wDist);
+    vec3 finalColor = mix(fogColor.xyz, radiance, fogFactor);
 
-    vec3 finalColor = mix(fogColor, radiance, fogFactor);
     fragmentColor = vec4(finalColor, 1.0);
 }

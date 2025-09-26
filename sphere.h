@@ -1,15 +1,23 @@
 #pragma once
 #include "geometry.h"
 
-class SphereGeometry : public Geometry {
-
+class Sphere : public Geometry {
 public:
+	int tesselation = 100;
+	float scale = 1;
 
-    SphereGeometry() {
-        create(10, 0.0);
-    }
+	Sphere() {
+		create(tesselation, tesselation);
+	}
 
-    float SDF(vec3 p) {
-        return length(p) - 10.0;
-    }
+	void eval(float u, float v, vec3& pos) {
+		float U = u * 2.0f * M_PI;
+		float V = v * M_PI;
+
+		float X = scale * sinf(V) * cosf(U);
+		float Y = scale * sinf(U) * sinf(V);
+		float Z = scale * -cosf(V);
+
+		pos = vec3(X, Y, Z);
+	}
 };

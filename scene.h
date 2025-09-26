@@ -6,17 +6,17 @@
 #include "light.h"
 #include "chunkmanager.h"
 #include <iostream>
+#include "colorpalette.h"
 
 class Scene {
 	float lastFrameTime = 0.0;
 	RenderState state;
 	TerrainData terrainData;
-	std::vector<Light> lights;
 	ChunkManager* chunkManager;
 	Camera* camera;
+	ColorPalette* palette;
 
 	void updateState(RenderState& state) {
-		state.lights = lights;
 		state.time = getTime();
 
 		state.M = mat4(	1, 0, 0, 0,
@@ -54,13 +54,15 @@ public:
 
 
 	void Build() {
-		camera = new Camera();
+		// Color palette
+		palette = new ColorPalette();
 
-		// Lights
-		lights.resize(1);
-		lights[0].wLightPos = vec4(0, 1000, 0, 1);
-		lights[0].Le = vec3(0.6, 0.6, 0.6);
-		lights[0].La = vec3(0.5, 0.5, 0.5);
+		// Sun
+		Light sun;
+		sun.dir = normalize(vec3(0.3f, 1.0f, -0.2f));
+		sun.Le = vec3(0.6, 0.6, 0.6);
+		sun.La = vec3(0.5, 0.5, 0.5);
+		state.light = sun;
 
 		// Terrain Data
 		terrainData.bedrockFrequency = 0.003f;
@@ -73,6 +75,8 @@ public:
 		terrainData.blendFactor = 25.0f;
 
 		chunkManager = new ChunkManager(200.0f, 5, terrainData);
+		camera = new Camera();
+		camera->setEyePos(chunkManager->getSpawnPoint());
 	}
 
 
