@@ -31,7 +31,7 @@ public:
         volumeComputeShader = new VolumeComputeShader();
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
         trackManager = new TrackManager();
-        water = new Object(new WaterShader(), new PlaneGeometry(100, chunkSize * ((float)renderDistance * 2.0 + 1.0)));
+        water = new Object(new WaterShader(), new PlaneGeometry(100, chunkSize * ((float)renderDistance * 4.0 + 1.0)));
 
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
@@ -41,8 +41,8 @@ public:
         // UBO for terrain params (binding = 3)
         glGenBuffers(1, &terrainUBO);
         glBindBuffer(GL_UNIFORM_BUFFER, terrainUBO);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 8, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferRange(GL_UNIFORM_BUFFER, 3, terrainUBO, 0, sizeof(float) * 8);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(TerrainData), nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferRange(GL_UNIFORM_BUFFER, 3, terrainUBO, 0, sizeof(TerrainData));
 
         updateTerrainUBO();
     }
@@ -167,6 +167,15 @@ public:
             float amplitudeMultiplier;
             float floorLevel;
             float blendFactor;
+
+            float warpFreq;
+            float warpAmp;
+            float warpStrength;
+            float warpFreqMult;
+            float warpAmpMult;
+            int   warpOctaves;
+            int   _pad3;
+            int   _pad4;
         } p{
             terrainData.bedrockFrequency,
             terrainData.bedrockAmplitude,
@@ -175,7 +184,15 @@ public:
             terrainData.amplitude,
             terrainData.amplitudeMultiplier,
             terrainData.floorLevel,
-            terrainData.blendFactor
+            terrainData.blendFactor,
+            terrainData.warpFreq,
+            terrainData.warpAmp,
+            terrainData.warpStrength,
+            terrainData.warpFreqMult,
+            terrainData.warpAmpMult,
+            terrainData.warpOctaves,
+            terrainData._pad3,
+            terrainData._pad4
         };
 
         glBindBuffer(GL_UNIFORM_BUFFER, terrainUBO);

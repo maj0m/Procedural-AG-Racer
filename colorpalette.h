@@ -151,6 +151,17 @@ public:
                 changed = true;
             }
 
+            if (ImGui::Button("Preset: Celest")) {
+                palette.terrainColors[0] = HexRGB(0x5aa8d8);
+                palette.terrainColors[1] = HexRGB(0xa4d8e5);
+                palette.terrainColors[2] = HexRGB(0xf9d4b4);
+                palette.terrainColors[3] = HexRGB(0xf1a76a);
+                palette.terrainColors[4] = HexRGB(0xd86f6f);
+                palette.grassColor = HexRGB(0x7f4b8b);
+                palette.waterColor = HexRGB(0x7f4b8b);
+                changed = true;
+            }
+
             if (ImGui::Button("Reset to Defaults")) {
                 SetDefaults();
                 changed = true;

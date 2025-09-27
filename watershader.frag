@@ -21,6 +21,14 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_amplitudeMultiplier;
     float u_floorLevel;
     float u_blendFactor;
+    float u_warpFreq;
+    float u_warpAmp;
+    float u_warpStrength;
+    float u_warpFreqMult;
+    float u_warpAmpMult; 
+    int u_warpOctaves;
+    float _pad3;
+    float _pad4;
 };
 
 layout(std140, binding = 7) uniform ColorPalette {

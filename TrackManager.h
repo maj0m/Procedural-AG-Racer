@@ -29,11 +29,11 @@ public:
         segments.clear();
 
         // Params
-        const int   INITIAL_POINT_COUNT = 8;
-        const float SPREAD_FROM_CENTER = 1000.0f;
+        const int   INITIAL_POINT_COUNT = 15;
+        const float SPREAD_FROM_CENTER = 2000.0f;
         const float MAX_MIDPOINT_DISP = 75.0f;
         const float MIN_HULLPOINT_DISTANCE = 150.0f;
-        const float TRACK_RADIUS = 60.0f;
+        const float TRACK_RADIUS = 64.0f;
         const int   CATMULL_SEGMENTS = 20;
 
         // 1) Random base points
