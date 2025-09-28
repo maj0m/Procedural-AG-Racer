@@ -41,13 +41,13 @@ public:
 
     // Defaults
     void SetDefaults() {
-        palette.terrainColors[0] = vec4(0.30f, 0.20f, 0.10f, 1.0f);
-        palette.terrainColors[1] = vec4(0.45f, 0.35f, 0.20f, 1.0f);
-        palette.terrainColors[2] = vec4(0.60f, 0.55f, 0.40f, 1.0f);
-        palette.terrainColors[3] = vec4(0.75f, 0.75f, 0.65f, 1.0f);
-        palette.terrainColors[4] = vec4(1.00f, 0.98f, 0.90f, 1.0f);
-        palette.grassColor = vec4(0.18, 0.45, 0.16, 1.0);
-        palette.waterColor = vec4(0.30f, 0.64f, 0.69f, 1.0f);
+        palette.terrainColors[0] = vec4(243, 233, 210, 255) / 255.0;
+        palette.terrainColors[1] = vec4(233, 196, 106, 255) / 255.0;
+        palette.terrainColors[2] = vec4(195, 122, 84, 255) / 255.0;
+        palette.terrainColors[3] = vec4(107, 91, 149, 255) / 255.0;
+        palette.terrainColors[4] = vec4(47, 42, 68, 255) / 255.0;
+        palette.grassColor = vec4(210, 230, 120, 255) / 255.0;
+        palette.waterColor = vec4(110, 170, 160, 255) / 255.0;
         palette.fogColor = CLEAR_COLOR;
         palette.angleThresholds = vec4(15.0f, 40.0f, 120.0f, 240.0f);
         palette.fogDensity = 0.000001f;

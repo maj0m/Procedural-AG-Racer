@@ -7,6 +7,7 @@
 #include "chunkmanager.h"
 #include <iostream>
 #include "colorpalette.h"
+#include "SkyDome.h"
 
 class Scene {
 	float lastFrameTime = 0.0;
@@ -15,6 +16,7 @@ class Scene {
 	ChunkManager* chunkManager;
 	Camera* camera;
 	ColorPalette* palette;
+	SkyDome* skyDome;
 
 	void updateState(RenderState& state) {
 		state.time = getTime();
@@ -49,6 +51,7 @@ public:
 		chunkManager->Update(camera->getEyePos());
 
 		// Draw calls
+		skyDome->Draw(state);
 		chunkManager->DrawChunks(state, *camera);
 	}
 
@@ -59,7 +62,7 @@ public:
 
 		// Sun
 		Light sun;
-		sun.dir = normalize(vec3(0.3f, 1.0f, -0.2f));
+		sun.dir = normalize(vec3(0.5f, 0.6f, -0.2f));
 		sun.Le = vec3(0.6, 0.6, 0.6);
 		sun.La = vec3(0.2, 0.2, 0.2);
 		state.light = sun;
@@ -67,9 +70,9 @@ public:
 		// Terrain Data
 		terrainData.bedrockFrequency = 0.003f;
 		terrainData.bedrockAmplitude = 20.0f;
-		terrainData.frequency = 0.0014f;
+		terrainData.frequency = 0.0016f;
 		terrainData.frequencyMultiplier = 2.0f;
-		terrainData.amplitude = 200.0f;
+		terrainData.amplitude = 180.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
 		terrainData.floorLevel = 10.0f;
 		terrainData.blendFactor = 32.0f;
@@ -79,7 +82,9 @@ public:
 		terrainData.warpFreqMult = 2.0;
 		terrainData.warpAmpMult = 0.5;
 		terrainData.warpOctaves = 6;
+		terrainData.seed = 178;
 
+		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(200.0f, 5, terrainData);
 		camera = new Camera();
 		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));

@@ -3,7 +3,7 @@
 
 class Sphere : public Geometry {
 public:
-	int tesselation = 100;
+	int tesselation = 20;
 	float scale = 1;
 
 	Sphere() {

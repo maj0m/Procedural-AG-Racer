@@ -148,11 +148,11 @@ void main() {
     vec3 H = normalize(L + V);
     float cost = max(dot(N, L), 0.0);
     float cosd = max(dot(N, H), 0.0);
-
     vec3 radiance = ka * light.La + (kd * cost + ks * pow(cosd, material.shininess)) * light.Le;
 
-
+	// Fog
     float fogFactor = exp(-fogDensity * wDist * wDist);
     vec3 finalColor = mix(fogColor.xyz, radiance, fogFactor);
+
     fragmentColor = vec4(finalColor, 1.0);
 }

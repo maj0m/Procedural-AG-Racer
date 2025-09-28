@@ -20,7 +20,7 @@ public:
 		geometry = _geometry;
 	}
 
-	void Draw(RenderState state) {
+	void Draw(RenderState& state) {
 		mat4 rotationMatrix = rotation.toRotationMatrix();
 		mat4 M = ScaleMatrix(scale) * rotationMatrix * TranslateMatrix(pos);
 
