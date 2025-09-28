@@ -174,8 +174,8 @@ public:
             float warpFreqMult;
             float warpAmpMult;
             int   warpOctaves;
-            int   _pad3;
-            int   _pad4;
+            int   seed;
+            float   _pad4;
         } p{
             terrainData.bedrockFrequency,
             terrainData.bedrockAmplitude,
@@ -191,7 +191,7 @@ public:
             terrainData.warpFreqMult,
             terrainData.warpAmpMult,
             terrainData.warpOctaves,
-            terrainData._pad3,
+            terrainData.seed,
             terrainData._pad4
         };
 

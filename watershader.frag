@@ -27,7 +27,7 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpFreqMult;
     float u_warpAmpMult; 
     int u_warpOctaves;
-    float _pad3;
+    int u_seed;
     float _pad4;
 };
 
@@ -49,7 +49,17 @@ in vec3 wView;
 in vec3 vertexPos;
 
 out vec4 fragmentColor;
-	
+
+// ---------- Seed ----------
+vec3 seedOffset(int s) {
+    return vec3(
+        float(s) * 127.1 + 311.7,
+        float(s) * 269.5 + 183.3,
+        float(s) * 419.2 + 247.0
+    );
+}
+
+// ---------- Noise ----------
 vec3 random3(vec3 c) {
 	float j = 4096.0*sin(dot(c,vec3(17.0, 59.4, 15.0)));
 	vec3 r;
@@ -64,7 +74,6 @@ vec3 random3(vec3 c) {
 // skew constants for 3d simplex functions
 const float F3 =  0.3333333;
 const float G3 =  0.1666667;
-
 float simplex3d(vec3 p) {
 	 vec3 s = floor(p + dot(p, vec3(F3)));
 	 vec3 x = p - s + dot(s, vec3(G3));
@@ -91,20 +100,25 @@ float simplex3d(vec3 p) {
 	 return dot(d, vec4(52.0));
 }
 
-float cubeVal(vec3 pos) {
-   
-    // Bedrock
-    float noise = 0.0;
-    float frequency = u_bedrockFrequency;
-    float amplitude = u_bedrockAmplitude;
+float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int octs) {
+    p += seedOffset(u_seed);
 
-    for(int i = 0; i < 6; ++i){
-        noise += simplex3d(pos * frequency) * amplitude;
-        frequency *= u_frequencyMultiplier;
-        amplitude *= u_amplitudeMultiplier;
+    float acc = 0.0;
+    for (int i = 0; i < octs; ++i) {
+        acc += simplex3d(p * freq) * amp;
+        freq *= fMul;
+        amp  *= aMul;
     }
-    
-    return  noise + u_floorLevel;
+    return acc;
+}
+
+// ---------- Terrain density ----------
+float bedrockDensityAt(vec3 pos) {
+    // Bedrock
+    float bedrockNoise = fbmSimplex3D(pos, u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6); // Accumulator
+    float bedrockDensity = -pos.y + bedrockNoise + u_floorLevel;
+
+    return bedrockDensity;
 }
 
 void main() {
@@ -117,7 +131,7 @@ void main() {
 
 	float alpha = 0.7;
 	vec3 foamColor = vec3(1.0);
-	float waterDepth = cubeVal(vertexPos);
+	float waterDepth = bedrockDensityAt(vertexPos);
 	float epsilon = 1.0;
 	if(abs(waterDepth) < epsilon) {
 		float foamFactor = abs(waterDepth) / epsilon;

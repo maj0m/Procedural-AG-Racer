@@ -31,7 +31,7 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpFreqMult;
     float u_warpAmpMult; 
     int u_warpOctaves;
-    float _pad3;
+    int u_seed;
     float _pad4;
 };
 
@@ -60,6 +60,14 @@ const vec3 CORNERS[8] = vec3[8](
     vec3(0,0,1), vec3(1,0,1), vec3(1,1,1), vec3(0,1,1)
 );
 
+// ---------- Seed ----------
+vec3 seedOffset(int s) {
+    return vec3(
+        float(s) * 127.1 + 311.7,
+        float(s) * 269.5 + 183.3,
+        float(s) * 419.2 + 247.0
+    );
+}
 
 // ---------- Noise ----------
 vec3 random3(vec3 c) {
@@ -103,6 +111,8 @@ float simplex3d(vec3 p) {
 }
 
 float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int octs) {
+    p += seedOffset(u_seed);
+
     float acc = 0.0;
     for (int i = 0; i < octs; ++i) {
         acc += simplex3d(p * freq) * amp;

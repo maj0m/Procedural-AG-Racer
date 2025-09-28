@@ -41,7 +41,7 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpFreqMult;
     float u_warpAmpMult; 
     int u_warpOctaves;
-    float _pad3;
+    int u_seed;
     float _pad4;
 };
 
@@ -59,6 +59,14 @@ uniform int  u_segIndexCount;
 uniform vec3  u_chunkId;
 uniform float u_chunkSize;
 
+// ---------- Seed ----------
+vec3 seedOffset(int s) {
+    return vec3(
+        float(s) * 127.1 + 311.7,
+        float(s) * 269.5 + 183.3,
+        float(s) * 419.2 + 247.0
+    );
+}
 
 // ---------- Noise ----------
 const float PI = 3.14159265359f;
@@ -118,6 +126,8 @@ float simplex3d(vec3 p) {
 }
 
 float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int octs) {
+    p += seedOffset(u_seed);
+
     float acc = 0.0;
     for (int i = 0; i < octs; ++i) {
         acc += simplex3d(p * freq) * amp;

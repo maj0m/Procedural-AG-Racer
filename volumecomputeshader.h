@@ -17,6 +17,8 @@ public:
     void Dispatch(int workGroupsX, int workGroupsY, int workGroupsZ, vec3 chunkID, float chunkSize, int tesselation, int segIndexCount) {
         glUseProgram(getId());
 
+
+        setUniform(123, "u_seed");
         setUniform(chunkID, "chunkID");
         setUniform(chunkSize, "chunkSize");
         setUniform(tesselation, "tesselation");

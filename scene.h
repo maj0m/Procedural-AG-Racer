@@ -120,6 +120,9 @@ public:
 		ImGui::SliderFloat("Warp Freq. Mul.", &terrainData.warpFreqMult, 0.0f, 1.0f);
 		ImGui::SliderFloat("Warp Ampl. Mul.", &terrainData.warpAmpMult, 0.0f, 2.0f);
 		ImGui::SliderInt("Warp Octaves", &terrainData.warpOctaves, 1, 8);
+		
+		ImGui::SeparatorText("Seed");
+		ImGui::SliderInt("Seed", &terrainData.seed, 1, 500);
 
 		if (ImGui::Button("Reload Chunks")) {
 			chunkManager->setTerrainData(terrainData);

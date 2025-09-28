@@ -17,6 +17,6 @@ struct TerrainData {
 	float warpFreqMult;
 	float warpAmpMult;
 	int   warpOctaves;
-	int   _pad3;
-	int   _pad4;
+	int   seed;
+	float _pad4;
 };
