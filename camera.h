@@ -31,7 +31,7 @@ public:
 
     std::vector<vec4> getFrustumPlanes() {
         std::vector<vec4> planes(6);
-        mat4 VP = TransposeMatrix(V1() * P());
+        mat4 VP = TransposeMatrix(V() * P());
 
         planes[0] = VP[3] + VP[0];          // Left 
         planes[1] = VP[3] - VP[0];          // Right 
@@ -138,18 +138,6 @@ public:
             0.0, sy, 0.0, 0.0,
             0.0, 0.0, -(fp + bp) / (bp - fp), -1.0,
             0.0, 0.0, -2.0 * fp * bp / (bp - fp), 0.0);
-    }
-
-    // Alternate view matrix with wEye set back for frustum culling (quick & dirty)
-    mat4 V1() {
-        vec3 w = normalize(-wFront);
-        vec3 u = normalize(cross(wUp, w));
-        vec3 v = cross(w, u);
-
-        return TranslateMatrix(-wEye + wFront * 400) * mat4(u.x, v.x, w.x, 0.0,
-            u.y, v.y, w.y, 0.0,
-            u.z, v.z, w.z, 0.0,
-            0.0, 0.0, 0.0, 1.0);
     }
 };
 

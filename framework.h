@@ -345,3 +345,11 @@ struct Quaternion {
 	}
 };
 
+struct AABB { vec3 min, max; };
+
+inline bool pointInAABB(const vec3& p, const AABB& b) {
+	return (p.x >= b.min.x && p.x <= b.max.x) &&
+		(p.y >= b.min.y && p.y <= b.max.y) &&
+		(p.z >= b.min.z && p.z <= b.max.z);
+}
+

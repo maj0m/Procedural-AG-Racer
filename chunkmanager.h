@@ -87,34 +87,33 @@ public:
         }
     }
 
-    bool isChunkVisible(const vec3& center, const std::vector<vec4>& frustumPlanes, float chunkSize) {
-        // Calculate corners of chunk bounding box
-        std::vector<vec3> corners(8);
-        float halfSize = chunkSize * 0.5;
+    bool isChunkVisible(const vec3& center, float chunkSize, const std::vector<vec4>& frustumPlanes, const vec3& cameraPos) {
+        // Build AABB
+        const float half = 0.5f * chunkSize;
+        AABB box;
+        box.min = center - vec3(half, half, half);
+        box.max = center + vec3(half, half, half);
 
-        for (int i = 0; i < 8; ++i) {
-            corners[i] = vec3(
-                center.x + halfSize * ((i & 1) ? 1 : -1),
-                center.y + halfSize * ((i & 2) ? 1 : -1),
-                center.z + halfSize * ((i & 4) ? 1 : -1)
+        // If the camera is inside the box, always draw
+        if (pointInAABB(cameraPos, box)) return true;
+
+        // p-vertex test
+        for (const vec4& p : frustumPlanes) {
+            vec3 n = vec3(p.x, p.y, p.z);
+
+            // choose farthest corner in direction of the plane normal
+            vec3 pv = vec3(
+                n.x >= 0.0f ? box.max.x : box.min.x,
+                n.y >= 0.0f ? box.max.y : box.min.y,
+                n.z >= 0.0f ? box.max.z : box.min.z
             );
+
+            float dist = dot(n, pv) + p.w;
+            if (dist < 0) return false; // outside
         }
-
-        // Test each plane against bounding box corners
-        for (const auto& plane : frustumPlanes) {
-            int outsideCorners = 0;
-            for (const auto& corner : corners) {
-                if (plane.x * corner.x + plane.y * corner.y + plane.z * corner.z + plane.w <= 0) {
-                    outsideCorners++;
-                }
-            }
-
-            // If all corners are outside this plane, the chunk is not visible
-            if (outsideCorners == 8) return false;
-        }
-
-        return true;
+        return true; // intersects or fully inside
     }
+
 
     void ReloadChunks() {
         // Create a vector to store chunk IDs before reloading them
@@ -146,8 +145,8 @@ public:
         int drawnChunks = 0;
         for (auto& pair : chunkMap) {
             totalChunks++;
-            vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f);
-            if (isChunkVisible(chunkCenter, frustumPlanes, chunkSize)) {
+            vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
+            if (isChunkVisible(chunkCenter,chunkSize, frustumPlanes, camera.getEyePos())) {
                 drawnChunks++;
                 pair.second->Draw(state);
             }
