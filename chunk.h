@@ -8,15 +8,19 @@
 #include "volumecomputeshader.h"
 #include <vector>
 #include "GrassField.h"
+#include "object.h"
+#include "plane.h"
+#include "terrainshader.h"
+#include "TrackManager.h"
 
 class Chunk {
 protected:
     vec3 id;
-    Shader* shader;
+    Shader* terrainShader;
     Material* material;
     unsigned int vbo = 0;
     float chunkSize;
-    unsigned int tesselation = 32;
+    unsigned int tesselation;
     unsigned int maxVertices;
     GLuint actualVertexCount;
     GrassField* grassField;
@@ -24,8 +28,8 @@ protected:
     GLuint segIndexCount = 0;    // small number per chunk
 
 public:
-    Chunk(vec3 id, float chunkSize, Shader* shader, Material* material, VolumeComputeShader* computeShader, TrackManager* trackManager)
-        : id(id), chunkSize(chunkSize), shader(shader), material(material) {
+    Chunk(vec3 id, float chunkSize, unsigned int tesselation, Shader* terrainShader, Material* material, VolumeComputeShader* computeShader, TrackManager* trackManager)
+        : id(id), chunkSize(chunkSize), tesselation(tesselation), terrainShader(terrainShader), material(material) {
 
         // Build per-chunk list of road segments
         std::vector<int> indices;
@@ -37,7 +41,7 @@ public:
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * segIndexCount, indices.data(), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, segIndexSSBO);
 
-        grassField = new GrassField(32000, id, chunkSize, segIndexCount);
+        grassField = new GrassField(24000, id, chunkSize, segIndexCount);
 
         maxVertices = tesselation * tesselation * tesselation * 15;
         const GLsizeiptr headerSize = 16;
@@ -68,17 +72,22 @@ public:
         grassField->destroy();
     }
 
-    void Draw(RenderState& state) {
+    void Draw(RenderState& state, Object* water) {
         mat4 M = ScaleMatrix(vec3(1, 1, 1)) * RotationMatrix(0, vec3(0, 1, 0)) * TranslateMatrix(vec3(0, 0, 0));
         state.M = M;
         state.MVP = state.M * state.V * state.P;
         state.material = material;
-        shader->Bind(state);
+        state.chunkId = id;
+        state.chunkSize = chunkSize;
 
+        terrainShader->Bind(state);
+
+        glEnable(GL_CULL_FACE);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
-
         grassField->Draw(state);
+        water->Draw(state);
+        glDisable(GL_CULL_FACE);
     }
 
     Chunk(const Chunk&) = delete;

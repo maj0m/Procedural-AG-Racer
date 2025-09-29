@@ -47,7 +47,7 @@ public:
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 
 		// Physics Step
-		camera->move();
+		camera->move(deltaTime);
 		chunkManager->Update(camera->getEyePos());
 
 		// Draw calls
@@ -64,7 +64,7 @@ public:
 		Light sun;
 		sun.dir = normalize(vec3(0.5f, 0.6f, -0.2f));
 		sun.Le = vec3(0.6, 0.6, 0.6);
-		sun.La = vec3(0.5, 0.5, 0.5);
+		sun.La = vec3(0.6, 0.6, 0.6);
 		state.light = sun;
 
 		// Terrain Data

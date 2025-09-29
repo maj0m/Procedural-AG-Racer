@@ -9,23 +9,24 @@ private:
 
     vec3 wEye, wFront, wUp;
     float fov, asp, fp, bp;
-    float speed = (float)20 / fps;
-    float sensitivity = 0.25;
-    float lastX = WINDOW_WIDTH / 2;
-    float lastY = WINDOW_HEIGHT / 2;
-    float yaw = 0.0;
-    float pitch = 0.0;
+    float walkSpeed = 200.0f;
+    float fastSpeed = 400.0f;
+    float sensitivity = 0.25f;
+    float lastX = WINDOW_WIDTH / 2.0f;
+    float lastY = WINDOW_HEIGHT / 2.0f;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
     bool firstMouse = false;
 
 public:
     Camera() {
-        wEye = vec3(0.0, 30.0, 0.0);
-        wFront = vec3(0.0, 0.0, -1.0);
-        wUp = vec3(0.0, 1.0, 0.0);
+        wEye = vec3(0.0f, 0.0f, 0.0f);
+        wFront = vec3(0.0f, 0.0f, -1.0f);
+        wUp = vec3(0.0f, 1.0f, 0.0f);
         asp = (float)WINDOW_WIDTH / WINDOW_HEIGHT;
-        fov = 75;
-        fp = 0.1;
-        bp = 2000.0;
+        fov = 75.0f;
+        fp = 0.1f;
+        bp = 2000.0f;
     }
 
 
@@ -80,18 +81,20 @@ public:
         wFront = normalize(direction);
     }
 
-    void move() {
+    void move(float deltaTime) {
+        float currentSpeed = (KEYDOWN_CTRL ? fastSpeed : walkSpeed);
+        float step = currentSpeed * deltaTime;
+
         vec3 front = normalize(wFront);
         vec3 right = normalize(cross(front, wUp));
+        vec3 up = wUp;
 
-        if (KEYDOWN_W)      wEye += speed * wFront;
-        if (KEYDOWN_S)      wEye -= speed * wFront;
-        if (KEYDOWN_A)      wEye -= speed * normalize(cross(wFront, wUp));
-        if (KEYDOWN_D)      wEye += speed * normalize(cross(wFront, wUp));
-        if (KEYDOWN_SPACE)  wEye += speed * wUp;
-        if (KEYDOWN_SHIFT)  wEye -= speed * wUp;
-        if (KEYDOWN_CTRL)   speed = min(200.0 / fps, 0.5);
-        else                speed = min(100.0 / fps, 0.2);
+        if (KEYDOWN_W)      wEye += step * front;
+        if (KEYDOWN_S)      wEye -= step * front;
+        if (KEYDOWN_A)      wEye -= step * right;
+        if (KEYDOWN_D)      wEye += step * right;
+        if (KEYDOWN_SPACE)  wEye += step * up;
+        if (KEYDOWN_SHIFT)  wEye -= step * up;
     }
 
     vec3 getEyePos() {

@@ -19,11 +19,15 @@ private:
     VolumeComputeShader* volumeComputeShader;
     TerrainData terrainData;
     unsigned int chunkSize;
+    unsigned int tesselation = 32;
     int renderDistance;
     GLuint vao = 0;         // Shared VAO for all chunks
     GLuint terrainUBO = 0;  // Terrain UBO that any shader can access
     TrackManager* trackManager;
-    Object* water;
+    
+    Shader* waterShader;
+    Geometry* waterGeometry;
+    Object* waterObject;
 
 public:
     ChunkManager(float chunkSize, int renderDistance, TerrainData terrainData) : chunkSize(chunkSize), renderDistance(renderDistance), terrainData(terrainData) {
@@ -31,7 +35,9 @@ public:
         volumeComputeShader = new VolumeComputeShader();
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
         trackManager = new TrackManager();
-        water = new Object(new WaterShader(), new PlaneGeometry(100, chunkSize * ((float)renderDistance * 4.0 + 1.0)));
+        waterShader = new WaterShader();
+        waterGeometry = new PlaneGeometry(tesselation, chunkSize);
+        waterObject = new Object(waterShader, waterGeometry);
 
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
@@ -57,7 +63,7 @@ public:
 
     void LoadChunk(const vec3& id) {
         if (chunkMap.find(id) == chunkMap.end()) {
-            chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
+            chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, tesselation, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
         }
     }
 
@@ -148,11 +154,9 @@ public:
             vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
             if (isChunkVisible(chunkCenter,chunkSize, frustumPlanes, camera.getEyePos())) {
                 drawnChunks++;
-                pair.second->Draw(state);
+                pair.second->Draw(state, waterObject);
             }
         }
-
-        water->Draw(state);
     }
 
     void updateTerrainUBO() {

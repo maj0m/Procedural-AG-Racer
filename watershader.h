@@ -13,6 +13,8 @@ public:
 	void Bind(RenderState state) {
 		Use();
 
+		setUniform(state.chunkId, "u_chunkId");
+		setUniform(state.chunkSize, "u_chunkSize");
 		setUniform(state.time, "u_time");
 		setUniform(state.MVP, "MVP");
 		setUniform(state.M, "M");
