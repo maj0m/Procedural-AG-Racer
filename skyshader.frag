@@ -1,16 +1,24 @@
 #version 450 core
 precision highp float;
 
-in vec3 wView;
-out vec4 fragmentColor;
+layout(std140, binding = 7) uniform ColorPalette {
+    vec4 terrainColors[5];
+	vec4 angleThresholds;
+    vec4 grassColor;
+    vec4 waterColor;
+    vec4 skyColor;
+    vec4 atmosphereColor;
+    float fogDensity;
+};
 
 // Uniforms
-uniform float u_time;
-uniform vec3  u_zenithColor;
-uniform vec3  u_horizonColor;
+//uniform float u_time;
 uniform vec3  u_sunDir;
 uniform float u_sunDiscSize;
 uniform float u_sunGlow;
+
+in vec3 wView;
+out vec4 fragmentColor;
 
 
 void main(){
@@ -18,7 +26,7 @@ void main(){
 
     // Base sky gradient
     float t = clamp(dir.y*0.5 + 0.5, 0.0, 1.0);
-    vec3 skyCol = mix(u_horizonColor, u_zenithColor, t);
+    vec4 skyCol = mix(skyColor, atmosphereColor, t);
 
     // Sun disc + halo
     vec3 sunDir = normalize(u_sunDir);
@@ -30,8 +38,8 @@ void main(){
 
     // Wide halo falloff
     float halo = smoothstep(0.5, 0.0, ang / max(u_sunGlow, 1e-5));
-    vec3  sunCol = vec3(1.0, 0.96, 0.85);
+    vec4 sunCol = vec4(1.0, 0.96, 0.85, 1.0);
     skyCol += sunCol * (disc * 8.0 + halo * 0.5);
 
-    fragmentColor = vec4(skyCol, 1.0);
+    fragmentColor = vec4(skyCol.xyz, 1.0);
 }

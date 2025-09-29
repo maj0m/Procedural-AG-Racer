@@ -25,7 +25,7 @@ public:
         asp = (float)WINDOW_WIDTH / WINDOW_HEIGHT;
         fov = 75;
         fp = 0.1;
-        bp = 1000.0;
+        bp = 2000.0;
     }
 
 
@@ -146,7 +146,7 @@ public:
         vec3 u = normalize(cross(wUp, w));
         vec3 v = cross(w, u);
 
-        return TranslateMatrix(-wEye + wFront * 128) * mat4(u.x, v.x, w.x, 0.0,
+        return TranslateMatrix(-wEye + wFront * 400) * mat4(u.x, v.x, w.x, 0.0,
             u.y, v.y, w.y, 0.0,
             u.z, v.z, w.z, 0.0,
             0.0, 0.0, 0.0, 1.0);

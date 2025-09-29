@@ -8,6 +8,7 @@ layout (location=3) in float iHeight; // height scale
 layout (location=4) in float iWidth;  // width scale
 layout (location=5) in float iPhase;  // sway phase
 
+// Uniforms
 uniform float u_time;
 uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
@@ -15,6 +16,7 @@ uniform vec3 wEye;						// Eye position
 out float vShade;                       // tiny variation for fragment	
 out vec3 wView;							// view in world space
 out float wDist;						// distance from camera
+out vec3 vtxPos;
 
 float u_windStrength = 1.0;  // meters of lateral tip deflection
 vec2  u_windDir = vec2(1.0, 0.3); // XZ direction (will be normalized)
@@ -24,6 +26,7 @@ mat2 rot(float a) {
     return mat2(c, -s, s, c);
 }
 
+// ---------- Main ----------
 void main() {
     // Normalize wind dir on XZ plane
     vec2 wdir = normalize(u_windDir);
@@ -48,6 +51,7 @@ void main() {
     vec3 worldPos = iPos + p;
     wView  = wEye - worldPos;
 	wDist = length(wView);
+    vtxPos = worldPos;
 
     // Small per-blade color variation
     vShade = fract(sin(dot(iPos.xz, vec2(12.9898,78.233))) * 43758.5453);

@@ -4,10 +4,11 @@
 
 struct ColorPaletteUBO {
     vec4 terrainColors[5];
+    vec4 angleThresholds; // degrees
     vec4 grassColor;
     vec4 waterColor;
-    vec4 fogColor;
-    vec4 angleThresholds; // degrees
+    vec4 skyColor;
+    vec4 atmosphereColor;
     float fogDensity;
     float _pad[3];
 };
@@ -46,10 +47,11 @@ public:
         palette.terrainColors[2] = vec4(195, 122, 84, 255) / 255.0;
         palette.terrainColors[3] = vec4(107, 91, 149, 255) / 255.0;
         palette.terrainColors[4] = vec4(47, 42, 68, 255) / 255.0;
+        palette.angleThresholds = vec4(15.0f, 40.0f, 120.0f, 240.0f);
         palette.grassColor = vec4(210, 230, 120, 255) / 255.0;
         palette.waterColor = vec4(110, 170, 160, 255) / 255.0;
-        palette.fogColor = CLEAR_COLOR;
-        palette.angleThresholds = vec4(15.0f, 40.0f, 120.0f, 240.0f);
+        palette.skyColor = vec4(0.06f, 0.22f, 0.60f, 1.0f);
+        palette.atmosphereColor = vec4(0.65f, 0.78f, 0.90f, 1.0f);;
         palette.fogDensity = 0.000001f;
     }
 
@@ -78,8 +80,8 @@ public:
                 col[0] = palette.waterColor.x; col[1] = palette.waterColor.y; col[2] = palette.waterColor.z;
                 if (ImGui::ColorEdit3("Water", col)) { palette.waterColor = vec4(col[0], col[1], col[2], 1.0); changed = true; }
 
-                col[0] = palette.fogColor.x; col[1] = palette.fogColor.y; col[2] = palette.fogColor.z;
-                if (ImGui::ColorEdit3("Fog", col)) { palette.fogColor = vec4(col[0], col[1], col[2], 1.0); changed = true; }
+                col[0] = palette.skyColor.x; col[1] = palette.skyColor.y; col[2] = palette.skyColor.z;
+                if (ImGui::ColorEdit3("Fog", col)) { palette.skyColor = vec4(col[0], col[1], col[2], 1.0); changed = true; }
             }
 
             ImGui::SeparatorText("Slope thresholds (deg)");

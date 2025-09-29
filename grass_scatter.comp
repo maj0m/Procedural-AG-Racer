@@ -236,8 +236,8 @@ void main() {
 
     // Other params
     float yaw    = rand01(gid) * (2.0f * PI);
-    float height = mix(3.75f, 4.35f, rand01(gid));
-    float width  = mix(1.60f, 2.20f, rand01(gid));
+    float height = mix(5.75f, 6.35f, rand01(gid));
+    float width  = mix(3.60f, 4.20f, rand01(gid));
     float phase  = rand01(gid) * (2.0f * PI);
 
 

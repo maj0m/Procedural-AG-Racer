@@ -6,8 +6,8 @@ struct Light {
 	vec3 dir;
 };
 
-layout(location = 0) in vec3 vtxPos;
-layout(location = 1) in vec2 vtxUV;
+layout(location = 0) in vec3 vertexPos;
+layout(location = 1) in vec2 vertexUV;
 
 uniform float u_time;
 uniform mat4 MVP, M;					// MVP, Model
@@ -15,7 +15,7 @@ uniform vec3 wEye;						// Eye position
 
 out float wDist;
 out vec3 wView;
-out vec3 vertexPos;
+out vec3 vtxPos;
 
 float waveOffset(vec3 vertex) {
     float waveLength = 5.0;
@@ -26,11 +26,11 @@ float waveOffset(vec3 vertex) {
 }
 
 void main() {
-	vertexPos = vtxPos;
-	vertexPos.y += waveOffset(vertexPos);
-	gl_Position = vec4(vertexPos, 1.0) * MVP;
+	vtxPos = vertexPos;
+	vtxPos.y += waveOffset(vtxPos);
+	gl_Position = vec4(vtxPos, 1.0) * MVP;
 
-	vec4 wPos = vec4(vertexPos, 1) * M;
+	vec4 wPos = vec4(vtxPos, 1) * M;
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
 }

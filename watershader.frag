@@ -33,10 +33,11 @@ layout(std140, binding = 3) uniform TerrainParams {
 
 layout(std140, binding = 7) uniform ColorPalette {
     vec4 terrainColors[5];
+	vec4 angleThresholds;
     vec4 grassColor;
     vec4 waterColor;
-    vec4 fogColor;
-    vec4 angleThresholds;
+    vec4 skyColor;
+    vec4 atmosphereColor;
     float fogDensity;
 };
 
@@ -46,7 +47,7 @@ uniform Light light;
 
 in float wDist;	// distance from camera
 in vec3 wView;		
-in vec3 vertexPos;
+in vec3 vtxPos;
 
 out vec4 fragmentColor;
 
@@ -121,38 +122,39 @@ float bedrockDensityAt(vec3 pos) {
     return bedrockDensity;
 }
 
+// ---------- Main ----------
 void main() {
-	vec3 xTangent = dFdx(wView);
-	vec3 yTangent = dFdy(wView);
-	vec3 N = normalize(cross(xTangent, yTangent)); // Surface normal
+	vec3 xTangent = dFdx(vtxPos);
+	vec3 yTangent = dFdy(vtxPos);
+	vec3 N = normalize(cross(xTangent, yTangent));
 	vec3 V = normalize(wView);
+	vec3 L = normalize(light.dir);
+	vec3 H = normalize(L + V);
+	float NdotL = max(dot(N, L), 0.0);
+	float NdotV = max(dot(N, V), 0.0);
+    float NdotH = max(dot(N, H), 0.0);
+	float spec = (NdotL > 0.0 && NdotV > 0.0) ? pow(NdotH, material.shininess) : 0.0;
 
 	vec3 texColor = waterColor.xyz;
 
-	float alpha = 0.7;
 	vec3 foamColor = vec3(1.0);
-	float waterDepth = bedrockDensityAt(vertexPos);
+	float waterDepth = bedrockDensityAt(vtxPos);
 	float epsilon = 1.0;
 	if(abs(waterDepth) < epsilon) {
 		float foamFactor = abs(waterDepth) / epsilon;
 		texColor = mix(foamColor, texColor, foamFactor);
-		alpha = mix(1.0, alpha, foamFactor);
 	}
 
-	vec3 ka = material.ka * texColor;
-	vec3 kd = material.kd * texColor;
-	vec3 ks = material.ks;
+    vec3 radiance = material.ka * texColor * light.La +
+		(material.kd * texColor * NdotL + material.ks * spec) * light.Le;
 
-    // Directional light: constant direction
-    vec3 L = normalize(light.dir);      // direction TOWARD surface
-    vec3 H = normalize(L + V);
-    float cost = max(dot(N, L), 0.0);
-    float cosd = max(dot(N, H), 0.0);
-    vec3 radiance = ka * light.La + (kd * cost + ks * pow(cosd, material.shininess)) * light.Le;
+    // Base sky gradient
+    float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);
+    vec4 skyCol = mix(skyColor, atmosphereColor, t);
 
 	// Fog
     float fogFactor = exp(-fogDensity * wDist * wDist);
-    vec3 finalColor = mix(fogColor.xyz, radiance, fogFactor);
+    vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);
 
     fragmentColor = vec4(finalColor, 1.0);
 }

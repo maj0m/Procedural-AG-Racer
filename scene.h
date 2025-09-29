@@ -64,7 +64,7 @@ public:
 		Light sun;
 		sun.dir = normalize(vec3(0.5f, 0.6f, -0.2f));
 		sun.Le = vec3(0.6, 0.6, 0.6);
-		sun.La = vec3(0.2, 0.2, 0.2);
+		sun.La = vec3(0.5, 0.5, 0.5);
 		state.light = sun;
 
 		// Terrain Data
@@ -85,7 +85,7 @@ public:
 		terrainData.seed = 178;
 
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(200.0f, 5, terrainData);
+		chunkManager = new ChunkManager(400.0f, 5, terrainData);
 		camera = new Camera();
 		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
 	}
