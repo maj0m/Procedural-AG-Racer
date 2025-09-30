@@ -32,7 +32,7 @@ public:
 
     std::vector<vec4> getFrustumPlanes() {
         std::vector<vec4> planes(6);
-        mat4 VP = TransposeMatrix(V() * P());
+        mat4 VP = TransposeMatrix(P() * V());
 
         planes[0] = VP[3] + VP[0];          // Left 
         planes[1] = VP[3] - VP[0];          // Right 
@@ -124,24 +124,30 @@ public:
 
 
     mat4 V() {
-        vec3 w = normalize(-wFront);
-        vec3 u = normalize(cross(wUp, w));
-        vec3 v = cross(w, u);
+        vec3 w = normalize(-wFront);            // backward
+        vec3 u = normalize(cross(wUp, w));      // right
+        vec3 v = cross(w, u);                   // up
 
-        return TranslateMatrix(-wEye) * mat4(u.x, v.x, w.x, 0.0,
-            u.y, v.y, w.y, 0.0,
-            u.z, v.z, w.z, 0.0,
-            0.0, 0.0, 0.0, 1.0);
+        return mat4(
+            vec4(u.x, v.x, w.x, 0.0),
+            vec4(u.y, v.y, w.y, 0.0),
+            vec4(u.z, v.z, w.z, 0.0),
+            vec4(-dot(u, wEye), -dot(v, wEye), -dot(w, wEye), 1.0)
+        );
     }
+
 
     mat4 P() {
-        float sy = 1.0 / tan(radians(fov / 2.0));
+        float f = 1.0f / tanf(radians(fov) * 0.5f); // = sy
 
-        return mat4(sy / asp, 0.0, 0.0, 0.0,
-            0.0, sy, 0.0, 0.0,
-            0.0, 0.0, -(fp + bp) / (bp - fp), -1.0,
-            0.0, 0.0, -2.0 * fp * bp / (bp - fp), 0.0);
+        return mat4(
+            vec4(f / asp, 0.0f, 0.0f, 0.0f),
+            vec4(0.0f, f, 0.0f, 0.0f),
+            vec4(0.0f, 0.0f, -(bp + fp) / (bp - fp), -1.0f),
+            vec4(0.0f, 0.0f, -(2.0f * bp * fp) / (bp - fp), 0.0f)
+        );
     }
+
 };
 
 

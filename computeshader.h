@@ -69,7 +69,7 @@ public:
 
 	void setUniform(const mat4& mat, const std::string& name) {
 		int location = glGetUniformLocation(shaderProgramId, name.c_str());
-		if (location >= 0) glUniformMatrix4fv(location, 1, GL_TRUE, mat);
+		if (location >= 0) glUniformMatrix4fv(location, 1, GL_FALSE, mat);
 	}
 
 	void setUniform(const EdgeTableTexture& texture, const std::string& name, unsigned int textureUnit = 0) {

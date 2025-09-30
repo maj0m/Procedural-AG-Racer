@@ -162,67 +162,65 @@ inline vec4 HexRGBA(uint32_t rgba) {
 	return vec4(r, g, b, a);
 }
 
-struct mat4 { // row-major matrix 4x4
-	vec4 rows[4];
-public:
-	mat4() {}
-	mat4(float m00, float m01, float m02, float m03,
-		float m10, float m11, float m12, float m13,
-		float m20, float m21, float m22, float m23,
-		float m30, float m31, float m32, float m33) {
-		rows[0][0] = m00; rows[0][1] = m01; rows[0][2] = m02; rows[0][3] = m03;
-		rows[1][0] = m10; rows[1][1] = m11; rows[1][2] = m12; rows[1][3] = m13;
-		rows[2][0] = m20; rows[2][1] = m21; rows[2][2] = m22; rows[2][3] = m23;
-		rows[3][0] = m30; rows[3][1] = m31; rows[3][2] = m32; rows[3][3] = m33;
-	}
-	mat4(vec4 it, vec4 jt, vec4 kt, vec4 ot) {
-		rows[0] = it; rows[1] = jt; rows[2] = kt; rows[3] = ot;
-	}
+struct mat4 { // column-major storage: cols[0..3]
+	vec4 cols[4];
+	mat4() { cols[0] = vec4(1, 0, 0, 0); cols[1] = vec4(0, 1, 0, 0); cols[2] = vec4(0, 0, 1, 0); cols[3] = vec4(0, 0, 0, 1); }
+	mat4(const vec4& c0, const vec4& c1, const vec4& c2, const vec4& c3) { cols[0] = c0; cols[1] = c1; cols[2] = c2; cols[3] = c3; }
 
-	vec4& operator[](int i) { return rows[i]; }
-	vec4 operator[](int i) const { return rows[i]; }
-	operator float*() const { return (float*)this; }
+	vec4& operator[](int i) { return cols[i]; }          // column access
+	vec4  operator[](int i) const { return cols[i]; }
+	operator const float* () const { return (const float*)this; } // contiguous, column-major
 };
 
-inline vec4 operator*(const vec4& v, const mat4& mat) {
-	return v[0] * mat[0] + v[1] * mat[1] + v[2] * mat[2] + v[3] * mat[3];
+// mat * vec (column vector)
+inline vec4 operator*(const mat4& M, const vec4& v) {
+	return v.x * M[0] + v.y * M[1] + v.z * M[2] + v.w * M[3];
 }
 
-inline mat4 operator*(const mat4& left, const mat4& right) {
-	mat4 result;
-	for (int i = 0; i < 4; i++) result.rows[i] = left.rows[i] * right;
-	return result;
+// mat * mat
+inline mat4 operator*(const mat4& A, const mat4& B) {
+	// Columns of result are A * B's columns
+	return mat4(A * B[0], A * B[1], A * B[2], A * B[3]);
 }
 
+// Builders
 inline mat4 TranslateMatrix(vec3 t) {
-	return mat4(vec4(1,   0,   0,   0),
-			    vec4(0,   1,   0,   0),
-				vec4(0,   0,   1,   0),
-				vec4(t.x, t.y, t.z, 1));
+	return mat4(
+		vec4(1, 0, 0, 0),
+		vec4(0, 1, 0, 0),
+		vec4(0, 0, 1, 0),
+		vec4(t.x, t.y, t.z, 1)
+	);
 }
 
 inline mat4 ScaleMatrix(vec3 s) {
-	return mat4(vec4(s.x, 0,   0,   0),
-			    vec4(0,   s.y, 0,   0),
-				vec4(0,   0,   s.z, 0),
-				vec4(0,   0,   0,   1));
+	return mat4(
+		vec4(s.x, 0, 0, 0),
+		vec4(0, s.y, 0, 0),
+		vec4(0, 0, s.z, 0),
+		vec4(0, 0, 0, 1)
+	);
 }
 
 inline mat4 RotationMatrix(float angle, vec3 w) {
 	float c = cosf(angle), s = sinf(angle);
 	w = normalize(w);
-	return mat4(vec4(c * (1 - w.x*w.x) + w.x*w.x, w.x*w.y*(1 - c) + w.z*s, w.x*w.z*(1 - c) - w.y*s, 0),
-			    vec4(w.x*w.y*(1 - c) - w.z*s, c * (1 - w.y*w.y) + w.y*w.y, w.y*w.z*(1 - c) + w.x*s, 0),
-			    vec4(w.x*w.z*(1 - c) + w.y*s, w.y*w.z*(1 - c) - w.x*s, c * (1 - w.z*w.z) + w.z*w.z, 0),
-			    vec4(0, 0, 0, 1));
+	float x = w.x, y = w.y, z = w.z;
+	// Columns (not rows): standard Rodrigues form for column-major
+	return mat4(
+		vec4(c + (1 - c) * x * x, (1 - c) * x * y + s * z, (1 - c) * x * z - s * y, 0),
+		vec4((1 - c) * y * x - s * z, c + (1 - c) * y * y, (1 - c) * y * z + s * x, 0),
+		vec4((1 - c) * z * x + s * y, (1 - c) * z * y - s * x, c + (1 - c) * z * z, 0),
+		vec4(0, 0, 0, 1)
+	);
 }
 
 inline mat4 TransposeMatrix(const mat4& m) {
 	return mat4(
-		vec4(m[0][0], m[1][0], m[2][0], m[3][0]),
-		vec4(m[0][1], m[1][1], m[2][1], m[3][1]),
-		vec4(m[0][2], m[1][2], m[2][2], m[3][2]),
-		vec4(m[0][3], m[1][3], m[2][3], m[3][3])
+		vec4(m[0].x, m[1].x, m[2].x, m[3].x),
+		vec4(m[0].y, m[1].y, m[2].y, m[3].y),
+		vec4(m[0].z, m[1].z, m[2].z, m[3].z),
+		vec4(m[0].w, m[1].w, m[2].w, m[3].w)
 	);
 }
 

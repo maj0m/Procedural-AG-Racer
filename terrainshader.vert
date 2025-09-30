@@ -24,9 +24,9 @@ out vec3 vtxPos;
 // ---------- Main ----------
 void main() {
 	vec3 vertexPos = vertices[gl_VertexID].xyz;
-	gl_Position = vec4(vertexPos, 1) * MVP;			// to NDC
+	gl_Position = MVP * vec4(vertexPos, 1);			// to NDC
 
-	vec4 wPos = vec4(vertexPos, 1) * M;
+	vec4 wPos = M * vec4(vertexPos, 1);
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
 	vtxPos = vertexPos;

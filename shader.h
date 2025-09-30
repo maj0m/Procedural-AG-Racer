@@ -115,7 +115,7 @@ public:
 
 	void setUniform(const mat4& mat, const std::string& name) {
 		int location = getLocation(name);
-		if (location >= 0) glUniformMatrix4fv(location, 1, GL_TRUE, mat);
+		if (location >= 0) glUniformMatrix4fv(location, 1, GL_FALSE, mat);
 	}
 
 	void setUniformMaterial(const Material& material, const std::string& name) {

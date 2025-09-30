@@ -21,10 +21,7 @@ class Scene {
 	void updateState(RenderState& state) {
 		state.time = getTime();
 
-		state.M = mat4(	1, 0, 0, 0,
-						0, 1, 0, 0,
-						0, 0, 1, 0,
-						0, 0, 0, 1);
+		state.M = mat4();
 		state.V = camera->V();
 		state.P = camera->P();
 

@@ -56,5 +56,5 @@ void main() {
     // Small per-blade color variation
     vShade = fract(sin(dot(iPos.xz, vec2(12.9898,78.233))) * 43758.5453);
 
-    gl_Position = vec4(worldPos, 1.0) * MVP;
+    gl_Position = MVP * vec4(worldPos, 1.0);
 }

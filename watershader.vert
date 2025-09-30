@@ -118,9 +118,9 @@ void main() {
 	waterDepth = bedrockDensityAt(vtxPos);
 	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 8.0, vtxPos.z), 0.02, 4.0, 2.0, 0.5, 2);
 	
-	gl_Position = vec4(vtxPos, 1.0) * MVP;
+	gl_Position = MVP * vec4(vtxPos, 1.0);
 
-	vec4 wPos = vec4(vtxPos, 1) * M;
+	vec4 wPos = M * vec4(vtxPos, 1);
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
 }

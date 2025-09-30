@@ -73,9 +73,9 @@ public:
     }
 
     void Draw(RenderState& state, Object* water) {
-        mat4 M = ScaleMatrix(vec3(1, 1, 1)) * RotationMatrix(0, vec3(0, 1, 0)) * TranslateMatrix(vec3(0, 0, 0));
+        mat4 M = TranslateMatrix(vec3(0, 0, 0)) * RotationMatrix(0, vec3(0, 1, 0)) * ScaleMatrix(vec3(1, 1, 1));
         state.M = M;
-        state.MVP = state.M * state.V * state.P;
+        state.MVP = state.P * state.V * state.M;
         state.material = material;
         state.chunkId = id;
         state.chunkSize = chunkSize;

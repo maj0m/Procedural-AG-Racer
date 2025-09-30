@@ -22,10 +22,10 @@ public:
 
 	void Draw(RenderState& state) {
 		mat4 rotationMatrix = rotation.toRotationMatrix();
-		mat4 M = ScaleMatrix(scale) * rotationMatrix * TranslateMatrix(pos);
+		mat4 M = TranslateMatrix(pos) * rotationMatrix * ScaleMatrix(scale);
 
 		state.M = M;
-		state.MVP = state.M * state.V * state.P;
+		state.MVP = state.P * state.V * state.M;
 		shader->Bind(state);
 		geometry->Draw();
 	}

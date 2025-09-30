@@ -17,9 +17,9 @@ public:
 	}
 
 	void Draw(RenderState& state) {
-		mat4 M = ScaleMatrix(vec3(1.0, 1.0, 1.0)) * TranslateMatrix(state.wEye);
+		mat4 M = TranslateMatrix(state.wEye) * ScaleMatrix(vec3(1.0, 1.0, 1.0));
 		state.M = M;
-		state.MVP = state.M * state.V * state.P;
+		state.MVP = state.P * state.V * state.M;
 		shader->Bind(state);
 
 		// Disable depth testing and cull outside of dome
