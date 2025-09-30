@@ -35,3 +35,6 @@ ipch/
 
 # RenderDoc
 *.rdc
+
+# ImGui
+*.ini
