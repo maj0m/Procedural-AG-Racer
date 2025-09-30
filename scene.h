@@ -85,7 +85,7 @@ public:
 		terrainData.seed = 178;
 
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(400.0f, 5, terrainData);
+		chunkManager = new ChunkManager(200.0f, 8, terrainData);
 		camera = new Camera();
 		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
 	}

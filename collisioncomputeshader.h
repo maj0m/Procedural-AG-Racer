@@ -25,7 +25,6 @@ public:
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, collisionBuffer);
         glDispatchCompute(1, 1, 1);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         CollisionData collisionData;
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, collisionBuffer);

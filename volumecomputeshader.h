@@ -27,7 +27,6 @@ public:
         setUniformTexture(*triTableTex, "triTableTex", 1);
 
         glDispatchCompute(workGroupsX, workGroupsY, workGroupsZ);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void setUniformTexture(const EdgeTableTexture& texture, const std::string& name, unsigned int textureUnit = 0) {

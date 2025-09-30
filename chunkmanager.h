@@ -14,6 +14,9 @@
 class ChunkManager {
 private:
     std::unordered_map<vec3, std::unique_ptr<Chunk>, Vec3Hash, Vec3Equal> chunkMap;
+    std::vector<vec3> loadQueue;
+    const int maxKicksPerFrame = 1;
+
     Shader* terrainShader;
     Material* terrainMaterial;
     VolumeComputeShader* volumeComputeShader;
@@ -61,14 +64,28 @@ public:
         delete terrainMaterial;
     }
 
+    void EnqueueChunk(const vec3& id) {
+        if (chunkMap.find(id) != chunkMap.end()) return; // already loaded
+        loadQueue.push_back(id);
+    }
+
     void LoadChunk(const vec3& id) {
-        if (chunkMap.find(id) == chunkMap.end()) {
-            chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, tesselation, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
-        }
+        if (chunkMap.find(id) != chunkMap.end()) return; // already loaded
+        chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, tesselation, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
     }
 
     void UnloadChunk(const vec3& id) {
         chunkMap.erase(id);
+    }
+
+    void KickChunkLoading() {
+        int kicked = 0;
+        while (kicked < maxKicksPerFrame && !loadQueue.empty()) {
+            vec3 id = loadQueue.back();
+            loadQueue.pop_back();
+            LoadChunk(id);
+            kicked++;
+        }
     }
 
     void Update(const vec3& cameraPos) {
@@ -76,7 +93,7 @@ public:
 
         for (int x = -renderDistance; x <= renderDistance; ++x) {
             for (int z = -renderDistance; z <= renderDistance; ++z) {
-                LoadChunk(vec3(currentChunk.x + x, 0, currentChunk.z + z));
+                EnqueueChunk(vec3(currentChunk.x + x, 0, currentChunk.z + z));
             }
         }
 
@@ -91,6 +108,8 @@ public:
         for (const vec3& id : chunksToUnload) {
             UnloadChunk(id);
         }
+
+        KickChunkLoading();
     }
 
     bool isChunkVisible(const vec3& center, float chunkSize, const std::vector<vec4>& frustumPlanes, const vec3& cameraPos) {
@@ -143,17 +162,12 @@ public:
 
 
     void DrawChunks(RenderState& state, Camera& camera) {
-        auto frustumPlanes = camera.getFrustumPlanes();
-
         glBindVertexArray(vao);
-
-        int totalChunks = 0;
-        int drawnChunks = 0;
+        
+        std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
-            totalChunks++;
             vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
             if (isChunkVisible(chunkCenter,chunkSize, frustumPlanes, camera.getEyePos())) {
-                drawnChunks++;
                 pair.second->Draw(state, waterObject);
             }
         }
@@ -170,7 +184,6 @@ public:
             float amplitudeMultiplier;
             float floorLevel;
             float blendFactor;
-
             float warpFreq;
             float warpAmp;
             float warpStrength;

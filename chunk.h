@@ -69,7 +69,7 @@ public:
     ~Chunk() {
         if (vbo) glDeleteBuffers(1, &vbo);
         if (segIndexSSBO) glDeleteBuffers(1, &segIndexSSBO);
-        grassField->destroy();
+        if (grassField) { grassField->destroy(); delete grassField; grassField = nullptr; }
     }
 
     void Draw(RenderState& state, Object* water) {
@@ -85,7 +85,7 @@ public:
         glEnable(GL_CULL_FACE);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
-        grassField->Draw(state);
+        if(grassField) grassField->Draw(state);
         water->Draw(state);
         glDisable(GL_CULL_FACE);
     }

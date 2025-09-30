@@ -21,7 +21,6 @@ layout(std140, binding = 7) uniform ColorPalette {
     float fogDensity;
 };
 
-uniform float u_time;
 uniform Material material;
 uniform Light light;
 

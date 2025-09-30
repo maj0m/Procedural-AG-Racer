@@ -18,6 +18,5 @@ public:
         const GLuint localSize = 256;
         GLuint groups = (instanceCount + localSize - 1) / localSize;
         glDispatchCompute(groups, 1, 1);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 };
