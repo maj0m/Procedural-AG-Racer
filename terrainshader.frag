@@ -46,8 +46,8 @@ vec3 normalToColor(vec3 N) {
 
 // ---------- Main ----------
 void main() {
-	vec3 xTangent = dFdx(vtxPos);
-	vec3 yTangent = dFdy(vtxPos);
+	vec3 xTangent = dFdx(wView);
+	vec3 yTangent = dFdy(wView);
 	vec3 N = normalize(cross(xTangent, yTangent));
 	vec3 V = normalize(wView);
 	vec3 L = normalize(light.dir);
