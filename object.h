@@ -10,6 +10,7 @@ struct Object {
 	Quaternion rotation;
 	Shader* shader;
 	Geometry* geometry;
+	Material* material;
 
 public:
 	Object(Shader* _shader, Geometry* _geometry) {
@@ -18,6 +19,7 @@ public:
 		rotation = Quaternion(1, 0, 0, 0); // Identity
 		shader = _shader;
 		geometry = _geometry;
+		material = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
 	}
 
 	void Draw(RenderState& state) {
@@ -26,6 +28,7 @@ public:
 
 		state.M = M;
 		state.MVP = state.P * state.V * state.M;
+		state.material = material;
 		shader->Bind(state);
 		geometry->Draw();
 	}

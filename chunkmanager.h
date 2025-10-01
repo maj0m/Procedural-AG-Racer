@@ -89,7 +89,7 @@ public:
     }
 
     void Update(const vec3& cameraPos) {
-        vec3 currentChunk = vec3(floor(cameraPos.x / chunkSize), floor(cameraPos.y / chunkSize), floor(cameraPos.z / chunkSize));
+        vec3 currentChunk = vec3(floor(cameraPos.x / chunkSize), 0.0f, floor(cameraPos.z / chunkSize));
 
         for (int x = -renderDistance; x <= renderDistance; ++x) {
             for (int z = -renderDistance; z <= renderDistance; ++z) {
@@ -99,9 +99,9 @@ public:
 
         std::vector<vec3> chunksToUnload;
         for (const auto& pair : chunkMap) {
-            vec3 chunkId = pair.first;
-            if (abs(chunkId.x - currentChunk.x) > renderDistance || abs(chunkId.z - currentChunk.z) > renderDistance) {
-                chunksToUnload.push_back(chunkId);
+            vec3 id = pair.first;
+            if (abs(id.x - currentChunk.x) > renderDistance || abs(id.z - currentChunk.z) > renderDistance) {
+                chunksToUnload.push_back(id);
             }
         }
 
@@ -219,7 +219,16 @@ public:
         float x = trackManager->segments[0].start_r.x;
         float y = trackManager->segments[0].start_r.y;
         float z = trackManager->segments[0].start_r.z;
-        return vec3(x, y, z);
+        return vec3(x, y + 40.0f, z);
+    }
+
+    bool getSegIndexForPos(const vec3& worldPos, GLuint& outSSBO, GLuint& outCount) const {
+        vec3 id = vec3(floor(worldPos.x / chunkSize), 0.0f, floor(worldPos.z / chunkSize));
+        auto it = chunkMap.find(id);
+        if (it == chunkMap.end()) { outSSBO = 0; outCount = 0; return false; }
+        outSSBO = it->second->getSegIndexSSBO();
+        outCount = it->second->getSegIndexCount();
+        return true;
     }
 
 

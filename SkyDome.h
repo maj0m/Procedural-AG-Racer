@@ -13,7 +13,7 @@ class SkyDome {
 public:
 	SkyDome() {
 		shader = new SkyShader();
-		geometry = new Sphere();
+		geometry = new SphereGeometry();
 	}
 
 	void Draw(RenderState& state) {

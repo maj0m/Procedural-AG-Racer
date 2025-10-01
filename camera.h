@@ -52,6 +52,13 @@ public:
         return planes;
     }
 
+    void followPlayer(const vec3& playerPos, const vec3& playerDirection, float distanceBehind, float heightAbove, float followSpeed, float dt) {
+        vec3 targetPosition = playerPos + vec3(-playerDirection.x * distanceBehind, heightAbove, -playerDirection.z * distanceBehind);
+        vec3 targetDirection = normalize(playerPos + playerDirection * 50.0 - targetPosition);
+        wEye = lerp(wEye, targetPosition, dt * followSpeed);
+        wFront = normalize(lerp(wFront, targetDirection, dt * followSpeed / 2));
+    }
+
 
     void rotate(int pX, int pY) {
         if (firstMouse) {

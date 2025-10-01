@@ -1,12 +1,12 @@
 #pragma once
 #include "geometry.h"
 
-class SphereGeometry : public Geometry {
+class ShipGeometry : public Geometry {
 public:
-	int tesselation = 20;
-	float scale = 1;
+	int tesselation = 6;
+	float scale = 2;
 
-	SphereGeometry() {
+	ShipGeometry() {
 		create(tesselation, tesselation);
 	}
 
@@ -15,8 +15,8 @@ public:
 		float V = v * M_PI;
 
 		float X = scale * sinf(V) * cosf(U);
-		float Y = scale * sinf(U) * sinf(V);
-		float Z = scale * -cosf(V);
+		float Y = scale * sinf(U) * sinf(V) * 0.5;
+		float Z = scale * -cosf(V) * 2.0;
 
 		pos = vec3(X, Y, Z);
 	}

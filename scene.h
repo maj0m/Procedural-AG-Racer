@@ -8,6 +8,7 @@
 #include <iostream>
 #include "colorpalette.h"
 #include "SkyDome.h"
+#include "Player.h"
 
 class Scene {
 	float lastFrameTime = 0.0;
@@ -17,6 +18,7 @@ class Scene {
 	Camera* camera;
 	ColorPalette* palette;
 	SkyDome* skyDome;
+	Player* player;
 
 	void updateState(RenderState& state) {
 		state.time = getTime();
@@ -44,12 +46,13 @@ public:
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 
 		// Physics Step
-		camera->move(deltaTime);
 		chunkManager->Update(camera->getEyePos());
+		player->Update(deltaTime);
 
 		// Draw calls
 		skyDome->Draw(state);
 		chunkManager->DrawChunks(state, *camera);
+		player->Draw(state);
 	}
 
 
@@ -82,9 +85,10 @@ public:
 		terrainData.seed = 178;
 
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(200.0f, 8, terrainData);
+		chunkManager = new ChunkManager(256.0f, 8, terrainData);
 		camera = new Camera();
-		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
+		//camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
+		player = new Player(camera, chunkManager);
 	}
 
 

@@ -90,6 +90,10 @@ public:
         glDisable(GL_CULL_FACE);
     }
 
+    // Getters
+    GLuint getSegIndexSSBO()  const { return segIndexSSBO; }
+    GLuint getSegIndexCount() const { return segIndexCount; }
+
     Chunk(const Chunk&) = delete;
     Chunk& operator=(const Chunk&) = delete;
 };

@@ -123,6 +123,10 @@ struct Vec3Equal {
 	}
 };
 
+vec3 lerp(const vec3& start, const vec3& end, float t) {
+	return start + (end - start) * t;
+}
+
 struct vec4 {
 	float x, y, z, w;
 
@@ -247,7 +251,7 @@ struct Quaternion {
 		);
 	}
 
-	vec3 left() {
+	vec3 right() {
 		return vec3(
 			1 - 2 * (y * y + z * z),
 			2 * (x * y - w * z),
@@ -263,68 +267,57 @@ struct Quaternion {
 		z /= norm;
 	}
 
-	// TESTING
+	mat4 toRotationMatrix() const {
+		float xx = x * x, yy = y * y, zz = z * z;
+		float xy = x * y, xz = x * z, yz = y * z;
+		float wx = w * x, wy = w * y, wz = w * z;
+
+		return mat4(
+			vec4(1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy), 0), // col 0: right
+			vec4(2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx), 0), // col 1: up
+			vec4(2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy), 0), // col 2: fwd
+			vec4(0, 0, 0, 1)
+		);
+	}
+
 	static Quaternion fromRotationMatrix(const mat4& m) {
+		// read rotation from columns m[0..2]
+		float m00 = m[0].x, m01 = m[1].x, m02 = m[2].x;
+		float m10 = m[0].y, m11 = m[1].y, m12 = m[2].y;
+		float m20 = m[0].z, m21 = m[1].z, m22 = m[2].z;
+
 		Quaternion q;
-
-		// Extract the rotation components from the matrix
-		float m00 = m[0][0], m01 = m[0][1], m02 = m[0][2];
-		float m10 = m[1][0], m11 = m[1][1], m12 = m[1][2];
-		float m20 = m[2][0], m21 = m[2][1], m22 = m[2][2];
-
 		float trace = m00 + m11 + m22;
-
 		if (trace > 0.0f) {
-			printf("A");
-			float s = sqrtf(trace + 1.0f) * 2.0f; // s = 4 * q.w
+			float s = sqrtf(trace + 1.0f) * 2.0f;
 			q.w = 0.25f * s;
-			q.x = -(m12 - m21) / s;
-			q.y = -(m20 - m02) / s;
-			q.z = -(m01 - m10) / s;
+			q.x = (m21 - m12) / s;
+			q.y = (m02 - m20) / s;
+			q.z = (m10 - m01) / s;
 		}
-		else if ((m00 > m11) && (m00 > m22)) {
-			printf("B");
-			float s = sqrtf(1.0f + m00 - m11 - m22) * 2.0f; // s = 4 * q.x
-			q.w = (m12 - m21) / s;
-			q.x = -0.25f * s;
-			q.y = -(m01 + m10) / s;
-			q.z = -(m02 + m20) / s;
+		else if (m00 > m11 && m00 > m22) {
+			float s = sqrtf(1.0f + m00 - m11 - m22) * 2.0f;
+			q.w = (m21 - m12) / s;
+			q.x = 0.25f * s;
+			q.y = (m01 + m10) / s;
+			q.z = (m02 + m20) / s;
 		}
 		else if (m11 > m22) {
-			printf("C");
-			float s = sqrtf(1.0f + m11 - m00 - m22) * 2.0f; // s = 4 * q.y
-			q.w = (m20 - m02) / s;
-			q.x = -(m01 + m10) / s;
-			q.y = -0.25f * s;
-			q.z = -(m12 + m21) / s;
+			float s = sqrtf(1.0f + m11 - m00 - m22) * 2.0f;
+			q.w = (m02 - m20) / s;
+			q.x = (m01 + m10) / s;
+			q.y = 0.25f * s;
+			q.z = (m12 + m21) / s;
 		}
 		else {
-			printf("D");
-			float s = sqrtf(1.0f + m22 - m00 - m11) * 2.0f; // s = 4 * q.z
-			q.w = (m01 - m10) / s;
+			float s = sqrtf(1.0f + m22 - m00 - m11) * 2.0f;
+			q.w = (m10 - m01) / s;
 			q.x = (m02 + m20) / s;
 			q.y = (m12 + m21) / s;
 			q.z = 0.25f * s;
 		}
-
 		q.normalize();
 		return q;
-	}
-
-
-
-
-	mat4 toRotationMatrix() const {
-		float wx = w * x, wy = w * y, wz = w * z;
-		float xx = x * x, xy = x * y, xz = x * z;
-		float yy = y * y, yz = y * z, zz = z * z;
-
-		return mat4(
-			vec4(1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy), 0.0),
-			vec4(2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx), 0.0),
-			vec4(2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy), 0.0),
-			vec4(0.0, 0.0, 0.0, 1.0)
-		);
 	}
 
 	static Quaternion fromAxisAngle(const vec3& axis, float angle) {

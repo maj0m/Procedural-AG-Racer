@@ -147,29 +147,26 @@ public:
 	// Return indices that intersect a chunk AABB
 	void GetSegmentsForChunk(const vec3& chunkId, float chunkSize, std::vector<int>& outIndices) const {
 		outIndices.clear();
-		
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                // chunk AABB
-                vec3 minC = (chunkId + vec3((float)x, 0.0, (float)y)) * chunkSize;
-                vec3 maxC = minC + vec3(chunkSize, chunkSize, chunkSize);
+        vec3 idOffset = vec3(1.0, 0.0, 1.0);
+        // chunk AABB (including neighbors)
+        vec3 minC = (chunkId - idOffset) * chunkSize;
+        vec3 maxC = (chunkId + idOffset) * chunkSize + vec3(chunkSize, chunkSize, chunkSize);
 
-                for (int i = 0; i < segments.size(); ++i) {
-                    vec3 start = vec3(segments[i].start_r.x, segments[i].start_r.y, segments[i].start_r.z);
-                    vec3 end = vec3(segments[i].end_pad.x, segments[i].end_pad.y, segments[i].end_pad.z);
-                    float radius = segments[i].start_r.w;
+        for (int i = 0; i < segments.size(); ++i) {
+            vec3 start = vec3(segments[i].start_r.x, segments[i].start_r.y, segments[i].start_r.z);
+            vec3 end = vec3(segments[i].end_pad.x, segments[i].end_pad.y, segments[i].end_pad.z);
+            float radius = segments[i].start_r.w;
 
-                    // Expand segment’s AABB by radius
-                    vec3 lo = minVec3(start, end) - vec3(radius);
-                    vec3 hi = maxVec3(start, end) + vec3(radius);
+            // Expand segment’s AABB by radius
+            vec3 lo = minVec3(start, end) - vec3(radius);
+            vec3 hi = maxVec3(start, end) + vec3(radius);
 
-                    // AABB overlap test
-                    bool overlap = (lo.x <= maxC.x && hi.x >= minC.x)
-                        && (lo.y <= maxC.y && hi.y >= minC.y)
-                        && (lo.z <= maxC.z && hi.z >= minC.z);
-                    if (overlap) outIndices.push_back(i);
-                }
-            }
+            // AABB overlap test
+            bool overlap = (lo.x <= maxC.x && hi.x >= minC.x)
+                && (lo.y <= maxC.y && hi.y >= minC.y)
+                && (lo.z <= maxC.z && hi.z >= minC.z);
+            if (overlap) outIndices.push_back(i);
+
         }
 
 		//printf("Total segments: %d --- Segments for Chunk[%f : %f] - %d\n", segments.size(), chunkId.x, chunkId.z, outIndices.size());
