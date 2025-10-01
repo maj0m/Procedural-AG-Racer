@@ -13,25 +13,38 @@ public:
 	GLuint segmentsSSBO = 0;   // binding = 4
 	GLuint segmentCount = 0;
 
-	// Only create after TerrainData UBO is uploaded!! (if using collision compute shader)
-	TrackManager() {
+	TrackManager(uint32_t seed) {
 		glGenBuffers(1, &segmentsSSBO);
 
-		GenerateSegments();
-		BindSegmentSSBO();
+		GenerateSegments(seed);
 	}
 
 	~TrackManager() {
 		if (segmentsSSBO) glDeleteBuffers(1, &segmentsSSBO);
 	}
 
-    void GenerateSegments() {
+    void BindSegmentSSBO() {
+        segmentCount = (GLuint)segments.size();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, segmentsSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(TrackSegment) * segmentCount, segments.data(), GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, segmentsSSBO); // binding = 4
+    }
+
+    void GenerateSegments(uint32_t seed) {
         segments.clear();
 
+        // Seeded RNG
+        std::seed_seq seq{ seed, 0x9E3779B9u, 0x85EBCA6Bu, 0xC2B2AE35u };
+        std::mt19937 rng(seq);
+        auto randf = [&](float a, float b) {
+            std::uniform_real_distribution<float> d(a, b);
+            return d(rng);
+        };
+
         // Params
-        const int   INITIAL_POINT_COUNT = 15;
-        const float SPREAD_FROM_CENTER = 2000.0f;
-        const float MAX_MIDPOINT_DISP = 75.0f;
+        const int   INITIAL_POINT_COUNT = 6;
+        const float SPREAD_FROM_CENTER = 5000.0f;
+        const float MAX_MIDPOINT_DISP = 500.0f;
         const float MIN_HULLPOINT_DISTANCE = 150.0f;
         const float TRACK_RADIUS = 64.0f;
         const int   CATMULL_SEGMENTS = 20;
@@ -135,14 +148,9 @@ public:
             const vec3& b = path[i + 1];
             segments.push_back({ vec4(a.x, a.y, a.z, TRACK_RADIUS), vec4(b.x, b.y, b.z, 0.0f) });
         }
-    }
 
-	void BindSegmentSSBO() {
-		segmentCount = (GLuint)segments.size();
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, segmentsSSBO);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(TrackSegment) * segmentCount, segments.data(), GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, segmentsSSBO); // binding = 4
-	}
+        BindSegmentSSBO();
+    }
 
 	// Return indices that intersect a chunk AABB
 	void GetSegmentsForChunk(const vec3& chunkId, float chunkSize, std::vector<int>& outIndices) const {

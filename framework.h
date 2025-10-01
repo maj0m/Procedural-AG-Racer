@@ -31,12 +31,6 @@ static void getFPS(int& fps) {
 	}
 }
 
-// RNG (deterministic)
-static std::mt19937 rng(0xC0FFFEu);
-auto randf = [&](float a, float b) {
-	std::uniform_real_distribution<float> d(a, b);
-	return d(rng);
-	};
 
 void clamp(float& x, float min_value, float max_value) {
 	x = min(max_value, max(x, min_value));

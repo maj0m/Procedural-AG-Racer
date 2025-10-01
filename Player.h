@@ -183,4 +183,9 @@ public:
     void Draw(RenderState& state) {
        playerObject->Draw(state);
     }
+
+    void Respawn() {
+        pos = chunkManager->getSpawnPoint();
+        vel = vec3(0, 0, 0);
+    }
 };

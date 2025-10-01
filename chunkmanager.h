@@ -37,7 +37,7 @@ public:
         terrainShader = new TerrainShader();
         volumeComputeShader = new VolumeComputeShader();
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
-        trackManager = new TrackManager();
+        trackManager = new TrackManager(terrainData.seed);
         waterShader = new WaterShader();
         waterGeometry = new PlaneGeometry(tesselation, chunkSize);
         waterObject = new Object(waterShader, waterGeometry);
@@ -237,6 +237,7 @@ public:
 
     // Setters
     void setTerrainData(const TerrainData& data) {
+        if (terrainData.seed != data.seed) trackManager->GenerateSegments(data.seed);
         terrainData = data;
         updateTerrainUBO();
     }

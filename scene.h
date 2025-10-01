@@ -85,7 +85,7 @@ public:
 		terrainData.seed = 178;
 
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(256.0f, 8, terrainData);
+		chunkManager = new ChunkManager(400.0f, 5, terrainData);
 		camera = new Camera();
 		//camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
 		player = new Player(camera, chunkManager);
@@ -133,6 +133,10 @@ public:
 		if (ImGui::Button("Reload Chunks")) {
 			chunkManager->setTerrainData(terrainData);
 			chunkManager->ReloadChunks();
+		}
+
+		if (ImGui::Button("Respawn")) {
+			player->Respawn();
 		}
 
 		ImGui::End();
