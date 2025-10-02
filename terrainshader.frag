@@ -24,6 +24,7 @@ layout(std140, binding = 7) uniform ColorPalette {
 uniform Material material;
 uniform Light light;
 
+flat in float vShadow;  // 0=lit, 1=shadowed
 in vec3 wView;
 in float wDist;
 in vec3 vtxPos;
@@ -59,8 +60,11 @@ void main() {
 
 	vec3 texColor = normalToColor(N);
 
-    vec3 radiance = material.ka * texColor * light.La +
-		(material.kd * texColor * NdotL + material.ks * spec) * light.Le;
+    vec3 direct  = (material.kd * texColor * NdotL + material.ks * spec) * light.Le;
+    vec3 ambient = material.ka * texColor * light.La;
+
+    float shadowTerm = 1.0 - vShadow; // 1 in light, 0 in shadow
+    vec3 radiance = ambient + shadowTerm * direct;
 
     // Sky gradient
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);

@@ -20,6 +20,7 @@ uniform vec3 wEye;						// Eye position
 out vec3 wView;							// view in world space
 out float wDist;						// distance from camera
 out vec3 vtxPos;
+flat out float vShadow;  // 0 = lit, 1 = shadowed
 
 // ---------- Main ----------
 void main() {
@@ -28,6 +29,7 @@ void main() {
 
 	vec4 wPos = M * vec4(vertexPos, 1);
 	wView  = wEye - wPos.xyz;
-	wDist = length(wView);         // Distance from eye to vertex
+	wDist = length(wView);				// Distance from eye to vertex
 	vtxPos = vertexPos;
+    vShadow = vertices[gl_VertexID].w; 	// baked in mc.comp
 }
