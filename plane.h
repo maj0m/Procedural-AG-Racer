@@ -14,8 +14,8 @@ public:
     }
 
     void eval(float u, float v, vec3& pos) {
-        float U = u * scale;
-        float V = v * scale;
+        float U = (u - 0.5f) * scale;
+        float V = (v - 0.5f) * scale;
 
         pos = vec3(U, 0, V);
     }

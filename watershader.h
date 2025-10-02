@@ -14,8 +14,8 @@ public:
 		Use();
 
 		setUniform(state.time, "u_time");
-		setUniform(state.chunkId, "u_chunkId");
-		setUniform(state.chunkSize, "u_chunkSize");
+		vec2 originXZ = vec2(floor(state.wEye.x / state.chunkSize), floor(state.wEye.z / state.chunkSize)) * state.chunkSize + vec2(state.chunkSize / 2.0f, state.chunkSize / 2.0f);
+		setUniform(originXZ, "u_planeOriginXZ");
 		setUniform(state.MVP, "MVP");
 		setUniform(state.M, "M");
 		setUniform(state.wEye, "wEye");

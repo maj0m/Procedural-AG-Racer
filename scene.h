@@ -18,7 +18,7 @@ class Scene {
 	Camera* camera;
 	ColorPalette* palette;
 	SkyDome* skyDome;
-	Player* player;
+	//Player* player;
 
 	void updateState(RenderState& state) {
 		state.time = getTime();
@@ -46,13 +46,16 @@ public:
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 
 		// Physics Step
+		camera->move(deltaTime);
+		//player->Update(deltaTime);
 		chunkManager->Update(camera->getEyePos());
-		player->Update(deltaTime);
+		
+		
 
 		// Draw calls
 		skyDome->Draw(state);
 		chunkManager->DrawChunks(state, *camera);
-		player->Draw(state);
+		//player->Draw(state);
 	}
 
 
@@ -74,7 +77,7 @@ public:
 		terrainData.frequencyMultiplier = 2.0f;
 		terrainData.amplitude = 180.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
-		terrainData.floorLevel = 10.0f;
+		terrainData.floorLevel = 16.0f;
 		terrainData.blendFactor = 32.0f;
 		terrainData.warpFreq = 0.001;
 		terrainData.warpAmp = 12.0;
@@ -83,12 +86,13 @@ public:
 		terrainData.warpAmpMult = 0.5;
 		terrainData.warpOctaves = 6;
 		terrainData.seed = 178;
+		terrainData.waterLevel = 5.0;
 
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(400.0f, 5, terrainData);
+		chunkManager = new ChunkManager(256.0f, 8, terrainData);
 		camera = new Camera();
-		//camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
-		player = new Player(camera, chunkManager);
+		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
+		//player = new Player(camera, chunkManager);
 	}
 
 
@@ -126,7 +130,8 @@ public:
 		ImGui::SliderFloat("Warp Freq. Mul.", &terrainData.warpFreqMult, 0.0f, 1.0f);
 		ImGui::SliderFloat("Warp Ampl. Mul.", &terrainData.warpAmpMult, 0.0f, 2.0f);
 		ImGui::SliderInt("Warp Octaves", &terrainData.warpOctaves, 1, 8);
-		
+		ImGui::SliderFloat("Water Level", &terrainData.waterLevel, 0.0f, 20.0f);
+
 		ImGui::SeparatorText("Seed");
 		ImGui::SliderInt("Seed", &terrainData.seed, 1, 500);
 
@@ -136,7 +141,7 @@ public:
 		}
 
 		if (ImGui::Button("Respawn")) {
-			player->Respawn();
+			//player->Respawn();
 		}
 
 		ImGui::End();

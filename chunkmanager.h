@@ -39,7 +39,7 @@ public:
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
         trackManager = new TrackManager(terrainData.seed);
         waterShader = new WaterShader();
-        waterGeometry = new PlaneGeometry(tesselation, chunkSize);
+        waterGeometry = new PlaneGeometry(tesselation * (2 * renderDistance + 1), chunkSize * (2 * renderDistance + 1));
         waterObject = new Object(waterShader, waterGeometry);
 
         // Create shared VAO for all chunks
@@ -164,13 +164,17 @@ public:
     void DrawChunks(RenderState& state, Camera& camera) {
         glBindVertexArray(vao);
         
+        glEnable(GL_CULL_FACE);
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
             vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
             if (isChunkVisible(chunkCenter,chunkSize, frustumPlanes, camera.getEyePos())) {
-                pair.second->Draw(state, waterObject);
+                pair.second->Draw(state);
             }
         }
+
+        waterObject->Draw(state);
+        glDisable(GL_CULL_FACE);
     }
 
     void updateTerrainUBO() {
@@ -191,7 +195,7 @@ public:
             float warpAmpMult;
             int   warpOctaves;
             int   seed;
-            float   _pad4;
+            float waterLevel;
         } p{
             terrainData.bedrockFrequency,
             terrainData.bedrockAmplitude,
@@ -208,7 +212,7 @@ public:
             terrainData.warpAmpMult,
             terrainData.warpOctaves,
             terrainData.seed,
-            terrainData._pad4
+            terrainData.waterLevel
         };
 
         glBindBuffer(GL_UNIFORM_BUFFER, terrainUBO);

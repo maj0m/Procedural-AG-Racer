@@ -18,5 +18,5 @@ struct TerrainData {
 	float warpAmpMult;
 	int   warpOctaves;
 	int   seed;
-	float _pad4;
+	float waterLevel;
 };

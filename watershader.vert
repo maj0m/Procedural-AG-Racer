@@ -26,12 +26,11 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpAmpMult; 
     int u_warpOctaves;
     int u_seed;
-    float _pad4;
+    float u_waterLevel;
 };
 
-uniform vec3 u_chunkId;
-uniform float u_chunkSize;
 uniform float u_time;
+uniform vec2 u_planeOriginXZ;
 uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
 
@@ -114,10 +113,10 @@ float bedrockDensityAt(vec3 pos) {
 // ---------- Main ----------
 void main() {
 	
-	vtxPos = vertexPos + u_chunkId * u_chunkSize;
+	vtxPos = vertexPos + vec3(u_planeOriginXZ.x, u_waterLevel, u_planeOriginXZ.y);
+	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 8.0, vtxPos.z), 0.02, 2.0, 2.0, 0.5, 2);
 	waterDepth = bedrockDensityAt(vtxPos);
-	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 8.0, vtxPos.z), 0.02, 4.0, 2.0, 0.5, 2);
-	
+
 	gl_Position = MVP * vec4(vtxPos, 1.0);
 
 	vec4 wPos = M * vec4(vtxPos, 1);

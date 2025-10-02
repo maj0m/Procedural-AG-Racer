@@ -72,22 +72,18 @@ public:
         if (grassField) { grassField->destroy(); delete grassField; grassField = nullptr; }
     }
 
-    void Draw(RenderState& state, Object* water) {
+    void Draw(RenderState& state) {
         mat4 M = TranslateMatrix(vec3(0, 0, 0)) * RotationMatrix(0, vec3(0, 1, 0)) * ScaleMatrix(vec3(1, 1, 1));
         state.M = M;
         state.MVP = state.P * state.V * state.M;
         state.material = material;
         state.chunkId = id;
         state.chunkSize = chunkSize;
-
         terrainShader->Bind(state);
 
-        glEnable(GL_CULL_FACE);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
         if(grassField) grassField->Draw(state);
-        water->Draw(state);
-        glDisable(GL_CULL_FACE);
     }
 
     // Getters

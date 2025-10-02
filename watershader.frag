@@ -64,5 +64,5 @@ void main() {
     float fogFactor = exp(-fogDensity * wDist * wDist);
     vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);
 
-    fragmentColor = vec4(finalColor, 0.8);
+    fragmentColor = vec4(finalColor, 0.7);
 }

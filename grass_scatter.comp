@@ -42,7 +42,7 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpAmpMult; 
     int u_warpOctaves;
     int u_seed;
-    float _pad4;
+    float u_waterLevel;
 };
 
 layout(std430, binding=4) readonly buffer TrackSegBuf {
@@ -230,7 +230,7 @@ void main() {
     vec3 pos = vec3(wx, wy, wz);
 
     // Skip writing if blade is underground or inside the track
-    if(pos.y < 1.0) { return; } // too close to water
+    if(pos.y < u_waterLevel + 2.0) { return; } // too close to water
     if (hillDensityAt(pos) > 0.0) { return; } // under hills
     if (trackMask(vec3(pos.x + simplex3d(pos) * 40.0, pos.y, pos.z + simplex3d(pos) * 40.0)) < 0.4) { return; } // inside track
 
