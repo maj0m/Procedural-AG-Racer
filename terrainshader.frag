@@ -1,14 +1,15 @@
 #version 450 core
 precision highp float;
 
-struct Light {
-	vec3 La, Le;
-	vec3 dir;
-};
-
 struct Material {
 	vec3 kd, ks, ka;
 	float shininess;
+};
+
+layout(std140, binding = 2) uniform Lighting {
+    vec4 u_lightDir;
+    vec4 u_lightLa;
+    vec4 u_lightLe;
 };
 
 layout(std140, binding = 7) uniform ColorPalette {
@@ -22,7 +23,6 @@ layout(std140, binding = 7) uniform ColorPalette {
 };
 
 uniform Material material;
-uniform Light light;
 
 flat in float vShadow;  // 0=lit, 1=shadowed
 in vec3 wView;
@@ -51,7 +51,7 @@ void main() {
 	vec3 yTangent = dFdy(wView);
 	vec3 N = normalize(cross(xTangent, yTangent));
 	vec3 V = normalize(wView);
-	vec3 L = normalize(light.dir);
+	vec3 L = normalize(u_lightDir.xyz);
 	vec3 H = normalize(L + V);
 	float NdotL = max(dot(N, L), 0.0);
 	float NdotV = max(dot(N, V), 0.0);
@@ -60,8 +60,8 @@ void main() {
 
 	vec3 texColor = normalToColor(N);
 
-    vec3 direct  = (material.kd * texColor * NdotL + material.ks * spec) * light.Le;
-    vec3 ambient = material.ka * texColor * light.La;
+    vec3 direct = (material.kd * texColor * NdotL + material.ks * spec) * u_lightLe.xyz;
+    vec3 ambient = material.ka * texColor * u_lightLa.xyz;
 
     float shadowTerm = 1.0 - vShadow; // 1 in light, 0 in shadow
     vec3 radiance = ambient + shadowTerm * direct;

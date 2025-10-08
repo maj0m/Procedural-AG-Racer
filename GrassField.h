@@ -14,7 +14,7 @@ struct GrassInstance {
     float height; // blade height
     float width;  // blade width
     float phase;  // wind sway
-    float _pad1;
+    float inShadow;
 };
 
 class GrassField {
@@ -23,7 +23,7 @@ public:
     size_t instanceCount = 0;   // final instance count after compute shader
     size_t capacity = 0;        // max attempts / capacity passed to compute shader
     Shader* shader = new GrassShader();
-    Material* grassMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
+    Material* grassMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 10.0);
     GrassScatterComputeShader scatterComputeShader;
 
 
@@ -101,6 +101,11 @@ public:
         glEnableVertexAttribArray(5);
         glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, phase)));
         glVertexAttribDivisor(5, 1);
+
+        // layout(location=6) = float inShadow
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, inShadow)));
+        glVertexAttribDivisor(6, 1);
 
         glBindVertexArray(0);
     }

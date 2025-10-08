@@ -1,6 +1,12 @@
 #version 450 core
 precision highp float;
 
+layout(std140, binding = 2) uniform Lighting {
+    vec4 u_lightDir;
+    vec4 u_lightLa;
+    vec4 u_lightLe;
+};
+
 layout(std140, binding = 7) uniform ColorPalette {
     vec4 terrainColors[5];
 	vec4 angleThresholds;
@@ -11,15 +17,11 @@ layout(std140, binding = 7) uniform ColorPalette {
     float fogDensity;
 };
 
-// Uniforms
-//uniform float u_time;
-uniform vec3  u_sunDir;
-uniform float u_sunDiscSize;
-uniform float u_sunGlow;
-
 in vec3 wView;
 out vec4 fragmentColor;
 
+const float sunDiscSize = 0.08;
+const float sunGlow = 0.3;
 
 void main(){
     vec3 dir = normalize(-wView);
@@ -29,15 +31,15 @@ void main(){
     vec4 skyCol = mix(skyColor, atmosphereColor, t);
 
     // Sun disc + halo
-    vec3 sunDir = normalize(u_sunDir);
+    vec3 sunDir = normalize(u_lightDir.xyz);
     float cosAng = clamp(dot(dir, sunDir), -1.0, 1.0);
-    float ang    = acos(cosAng);
+    float ang = acos(cosAng);
 
     // Inside disc -> 1, soft edge
-    float disc = smoothstep(u_sunDiscSize, u_sunDiscSize*0.7, ang);
+    float disc = smoothstep(sunDiscSize, sunDiscSize*0.7, ang);
 
     // Wide halo falloff
-    float halo = smoothstep(0.5, 0.0, ang / max(u_sunGlow, 1e-5));
+    float halo = smoothstep(0.5, 0.0, ang / max(sunGlow, 1e-5));
     vec4 sunCol = vec4(1.0, 0.96, 0.85, 1.0);
     skyCol += sunCol * (disc * 8.0 + halo * 0.5);
 

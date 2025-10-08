@@ -18,7 +18,8 @@ class Scene {
 	Camera* camera;
 	ColorPalette* palette;
 	SkyDome* skyDome;
-	//Player* player;
+	Player* player;
+
 
 	void updateState(RenderState& state) {
 		state.time = getTime();
@@ -46,8 +47,8 @@ public:
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 
 		// Physics Step
-		camera->move(deltaTime);
-		//player->Update(deltaTime);
+		//camera->move(deltaTime);
+		player->Update(deltaTime);
 		chunkManager->Update(camera->getEyePos());
 		
 		
@@ -55,7 +56,7 @@ public:
 		// Draw calls
 		skyDome->Draw(state);
 		chunkManager->DrawChunks(state, *camera);
-		//player->Draw(state);
+		player->Draw(state);
 	}
 
 
@@ -65,10 +66,11 @@ public:
 
 		// Sun
 		Light sun;
-		sun.dir = normalize(vec3(0.5f, 0.6f, -0.2f));
-		sun.Le = vec3(0.6, 0.6, 0.6);
-		sun.La = vec3(0.6, 0.6, 0.6);
-		state.light = sun;
+		sun.data.dir = vec4(normalize(vec3(0.5f, 0.6f, -0.2f)), 0.0f);
+		sun.data.la = vec4(0.6f, 0.6f, 0.6f, 0.0f);
+		sun.data.le = vec4(0.6f, 0.6f, 0.6f, 0.0f);
+		sun.InitUBO();
+
 
 		// Terrain Data
 		terrainData.bedrockFrequency = 0.003f;
@@ -77,7 +79,7 @@ public:
 		terrainData.frequencyMultiplier = 2.0f;
 		terrainData.amplitude = 180.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
-		terrainData.floorLevel = 16.0f;
+		terrainData.floorLevel = 25.0f;
 		terrainData.blendFactor = 32.0f;
 		terrainData.warpFreq = 0.001;
 		terrainData.warpAmp = 12.0;
@@ -85,14 +87,14 @@ public:
 		terrainData.warpFreqMult = 2.0;
 		terrainData.warpAmpMult = 0.5;
 		terrainData.warpOctaves = 6;
-		terrainData.seed = 178;
-		terrainData.waterLevel = 5.0;
+		terrainData.seed = 310;
+		terrainData.waterLevel = 16.0;
 
 		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(256.0f, 8, terrainData);
 		camera = new Camera();
-		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
-		//player = new Player(camera, chunkManager);
+		//camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
+		player = new Player(camera, chunkManager);
 	}
 
 
@@ -141,7 +143,7 @@ public:
 		}
 
 		if (ImGui::Button("Respawn")) {
-			//player->Respawn();
+			player->Respawn();
 		}
 
 		ImGui::End();

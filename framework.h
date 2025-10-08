@@ -125,6 +125,7 @@ struct vec4 {
 	float x, y, z, w;
 
 	vec4(float x0 = 0, float y0 = 0, float z0 = 0, float w0 = 0) { x = x0; y = y0; z = z0; w = w0; }
+	vec4(const vec3& v, float w0 = 0.0f) { x = v.x; y = v.y; z = v.z; w = w0; }
 
 	float& operator[](int j) { return *(&x + j); }
 	float operator[](int j) const { return *(&x + j); }

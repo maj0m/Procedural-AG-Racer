@@ -7,6 +7,7 @@ layout (location=2) in float iYaw;    // yaw (radians)
 layout (location=3) in float iHeight; // height scale
 layout (location=4) in float iWidth;  // width scale
 layout (location=5) in float iPhase;  // sway phase
+layout (location=6) in float inShadow;
 
 // Uniforms
 uniform float u_time;
@@ -17,6 +18,7 @@ out float vShade;                       // tiny variation for fragment
 out vec3 wView;							// view in world space
 out float wDist;						// distance from camera
 out vec3 vtxPos;
+out float vShadow;
 
 float u_windStrength = 1.0;  // meters of lateral tip deflection
 vec2  u_windDir = vec2(1.0, 0.3); // XZ direction (will be normalized)
@@ -57,4 +59,6 @@ void main() {
     vShade = fract(sin(dot(iPos.xz, vec2(12.9898,78.233))) * 43758.5453);
 
     gl_Position = MVP * vec4(worldPos, 1.0);
+
+    vShadow = inShadow;
 }

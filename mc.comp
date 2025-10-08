@@ -15,6 +15,12 @@ layout(std430, binding = 0) buffer VertexBuffer {
     vec4 vertices[];    // payload starts at offset 16
 };
 
+layout(std140, binding = 2) uniform Lighting {
+    vec4 u_lightDir;
+    vec4 u_lightLa;
+    vec4 u_lightLe;
+};
+
 // UBO set in ChunkManager
 layout(std140, binding = 3) uniform TerrainParams {
     float u_bedrockFrequency;
@@ -173,12 +179,12 @@ float trackMask(vec3 p) {
 // ---------- Terrain density ----------
 float densityAt(vec3 pos) {    
     // Bedrock
-    float bedrockNoise = fbmSimplex3D(pos, u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6); // Accumulator
+    float bedrockNoise = fbmSimplex3D(vec3(pos.x, 0.0, pos.z), u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
     float bedrockDensity = -pos.y + bedrockNoise + u_floorLevel;
 
     // Hills and Features
     vec3 hpos = warpXZ(pos, u_warpFreq, u_warpAmp, u_warpFreqMult, u_warpAmpMult, u_warpOctaves, u_warpStrength);
-    float hillNoise = fbmSimplex3D(hpos, u_frequency, u_amplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6);
+    float hillNoise = fbmSimplex3D(hpos, u_frequency, u_amplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
     float terrainDensity = -pos.y + hillNoise;
 
     // Combined terrain with track mask
@@ -200,15 +206,13 @@ int triTableValue(int i, int j) {
     return texelFetch(triTableTex, ivec2(j, i), 0).r;
 }
 
-vec3 u_lightDir = normalize(vec3(0.5, 0.6, -0.2));
-
 
 // ---------- Shadow Ray-Marcher ----------
 bool isInShadow(vec3 wPos) {
-    vec3 rayDir = normalize(u_lightDir);
+    vec3 rayDir = normalize(u_lightDir.xyz);
 
     // Small bias to avoid self-hits
-    const float eps = 5.0;
+    const float eps = 10.0;
     vec3 p = wPos + rayDir * eps;
 
     // Fixed-step march

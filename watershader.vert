@@ -1,11 +1,6 @@
 #version 450 core
 precision highp float;
 
-struct Light {
-	vec3 La, Le;
-	vec3 dir;
-};
-
 layout(location = 0) in vec3 vertexPos;
 layout(location = 1) in vec2 vertexUV;
 
@@ -104,7 +99,7 @@ float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int oc
 // ---------- Terrain density ----------
 float bedrockDensityAt(vec3 pos) {
     // Bedrock
-    float bedrockNoise = fbmSimplex3D(pos, u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6); // Accumulator
+    float bedrockNoise = fbmSimplex3D(vec3(pos.x, 0.0, pos.z), u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
     float bedrockDensity = -pos.y + bedrockNoise + u_floorLevel;
 
     return bedrockDensity;

@@ -10,7 +10,6 @@ struct RenderState {
 	vec3 wUp;
 	mat4 MVP, M, V, P;
 	Material* material;
-	Light light;
 	vec3 chunkId;
 	float chunkSize;
 };

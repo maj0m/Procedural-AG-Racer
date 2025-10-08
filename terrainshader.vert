@@ -1,11 +1,6 @@
 #version 450 core
 precision highp float;
 
-struct Light {
-	vec3 La, Le;
-	vec3 dir;
-};
-
 layout(std430, binding = 0) buffer VertexBuffer {
     uint vertexCount;   // counts vertices written (multiple of 3)
     uint _pad0;         // pad to 16 bytes for std430 alignment

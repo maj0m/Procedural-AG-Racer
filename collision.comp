@@ -157,12 +157,12 @@ float trackMask(vec3 p) {
 // ---------- Terrain density ----------
 float densityAt(vec3 pos) {    
     // Bedrock
-    float bedrockNoise = fbmSimplex3D(pos, u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6); // Accumulator
+    float bedrockNoise = fbmSimplex3D(vec3(pos.x, 0.0, pos.z), u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
     float bedrockDensity = -pos.y + bedrockNoise + u_floorLevel;
 
     // Hills and Features
     vec3 hpos = warpXZ(pos, u_warpFreq, u_warpAmp, u_warpFreqMult, u_warpAmpMult, u_warpOctaves, u_warpStrength);
-    float hillNoise = fbmSimplex3D(hpos, u_frequency, u_amplitude, u_frequencyMultiplier, u_amplitudeMultiplier, 6);
+    float hillNoise = fbmSimplex3D(hpos, u_frequency, u_amplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
     float terrainDensity = -pos.y + hillNoise;
 
     // Combined terrain with track mask

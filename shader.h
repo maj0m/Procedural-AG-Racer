@@ -126,9 +126,9 @@ public:
 	}
 
 	void setUniformLight(const Light& L, const std::string& name) {
-		setUniform(L.La, name + ".La");
-		setUniform(L.Le, name + ".Le");
-		setUniform(L.dir, name + ".dir");
+		setUniform(L.data.la, name + ".La");
+		setUniform(L.data.le, name + ".Le");
+		setUniform(L.data.dir, name + ".dir");
 	}
 
 	~Shader() { if (shaderProgramId > 0) glDeleteProgram(shaderProgramId); }
