@@ -28,7 +28,7 @@ void main() {
 	float NdotL = max(dot(N, L), 0.0);
 	float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
-	float spec = pow(NdotH, material.shininess);
+	float spec = pow(NdotH, material.shininess) * NdotL;
 
 	vec3 texColor = vec3(78, 162, 177) / 255.0;
 

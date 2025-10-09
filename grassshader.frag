@@ -45,7 +45,7 @@ void main() {
 	float NdotL = max(dot(N, L), 0.0);
 	float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
-	float spec = (NdotL > 0.0 && NdotV > 0.0) ? pow(NdotH, material.shininess) : 0.0;
+	float spec = pow(NdotH, material.shininess) * NdotL;
 	float diff = (NdotL * 0.5 + 0.5);
 
 	// Green with variation from vShade
@@ -54,7 +54,7 @@ void main() {
 	vec3 direct = (material.kd * texColor * diff + material.ks * spec) * u_lightLe.xyz;
     vec3 ambient = material.ka * texColor * u_lightLa.xyz;
 
-    float shadowTerm = 1.0 - vShadow; // 1 in light, 0 in shadow
+    float shadowTerm = 1.0 - vShadow * 0.7; // 1 in light, 0 in shadow
     vec3 radiance = ambient + shadowTerm * direct;
 
     // Base sky gradient
