@@ -42,16 +42,16 @@ public:
 
     // Defaults
     void SetDefaults() {
-        palette.terrainColors[0] = vec4(243, 233, 210, 255) / 255.0;
-        palette.terrainColors[1] = vec4(233, 196, 106, 255) / 255.0;
-        palette.terrainColors[2] = vec4(195, 122, 84, 255) / 255.0;
-        palette.terrainColors[3] = vec4(107, 91, 149, 255) / 255.0;
-        palette.terrainColors[4] = vec4(47, 42, 68, 255) / 255.0;
+        palette.terrainColors[0] = HexRGB(0xF3E9D2);
+        palette.terrainColors[1] = HexRGB(0xE9C46A);
+        palette.terrainColors[2] = HexRGB(0xC37A54);
+        palette.terrainColors[3] = HexRGB(0x6B5B95);
+        palette.terrainColors[4] = HexRGB(0x2F2A44);
         palette.angleThresholds = vec4(15.0f, 40.0f, 120.0f, 240.0f);
-        palette.grassColor = vec4(210, 230, 120, 255) / 255.0;
-        palette.waterColor = vec4(110, 170, 160, 255) / 255.0;
+        palette.grassColor = HexRGB(0xD2E678);
+        palette.waterColor = HexRGB(0x6EAAA0);
         palette.skyColor = vec4(0.06f, 0.22f, 0.60f, 1.0f);
-        palette.atmosphereColor = vec4(0.65f, 0.78f, 0.90f, 1.0f);;
+        palette.atmosphereColor = vec4(0.65f, 0.78f, 0.90f, 1.0f);
         palette.fogDensity = 0.000001f;
     }
 
@@ -109,64 +109,124 @@ public:
             }
 
             // Presets
-            if (ImGui::Button("Preset: Desert")) {
-                palette.terrainColors[0] = vec4(0.55f, 0.45f, 0.30f, 1.0f);
-                palette.terrainColors[1] = vec4(0.70f, 0.55f, 0.35f, 1.0f);
-                palette.terrainColors[2] = vec4(0.80f, 0.65f, 0.45f, 1.0f);
-                palette.terrainColors[3] = vec4(0.90f, 0.78f, 0.60f, 1.0f);
-                palette.terrainColors[4] = vec4(1.00f, 0.92f, 0.75f, 1.0f);
-                palette.grassColor = vec4(0.55f, 0.60f, 0.30f, 1.0f);
-                palette.waterColor = vec4(0.25f, 0.55f, 0.65f, 1.0f);
-                changed = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Preset: Alpine")) {
-                palette.terrainColors[0] = vec4(0.20f, 0.22f, 0.20f, 1.0f);
-                palette.terrainColors[1] = vec4(0.30f, 0.34f, 0.30f, 1.0f);
-                palette.terrainColors[2] = vec4(0.55f, 0.60f, 0.55f, 1.0f);
-                palette.terrainColors[3] = vec4(0.80f, 0.85f, 0.82f, 1.0f);
-                palette.terrainColors[4] = vec4(0.95f, 0.97f, 0.98f, 1.0f);
-                palette.grassColor = vec4(0.20f, 0.55f, 0.25f, 1.0f);
-                palette.waterColor = vec4(0.12f, 0.28f, 0.65f, 1.0f);
-                changed = true;
-            }
-
             if (ImGui::Button("Preset: Dusk")) {
-                palette.terrainColors[0] = vec4(243, 233, 210, 255) / 255.0;
-                palette.terrainColors[1] = vec4(233, 196, 106, 255) / 255.0;
-                palette.terrainColors[2] = vec4(195, 122, 84, 255) / 255.0;
-                palette.terrainColors[3] = vec4(107, 91, 149, 255) / 255.0;
-                palette.terrainColors[4] = vec4(47, 42, 68, 255) / 255.0;
-                palette.grassColor = vec4(210, 230, 120, 255) / 255.0;
-                palette.waterColor = vec4(110, 170, 160, 255) / 255.0;
-                changed = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Preset: Marill")) {
-                palette.terrainColors[0] = HexRGB(0xf7d9a1);
-                palette.terrainColors[1] = HexRGB(0xf2a78c);
-                palette.terrainColors[2] = HexRGB(0xd78b88);
-                palette.terrainColors[3] = HexRGB(0xb86b8a);
-                palette.terrainColors[4] = HexRGB(0x7f4b8b);
-                palette.grassColor = HexRGB(0x7f4b8b);
-                palette.waterColor = HexRGB(0x7f4b8b);
+                palette.terrainColors[0] = HexRGB(0xF3E9D2);
+                palette.terrainColors[1] = HexRGB(0xE9C46A);
+                palette.terrainColors[2] = HexRGB(0xC37A54);
+                palette.terrainColors[3] = HexRGB(0x6B5B95);
+                palette.terrainColors[4] = HexRGB(0x2F2A44);
+                palette.angleThresholds = vec4(15.0f, 40.0f, 120.0f, 240.0f);
+                palette.grassColor = HexRGB(0xD2E678);
+                palette.waterColor = HexRGB(0x6EAAA0);
+                palette.skyColor = HexRGB(0x0F3899);
+                palette.fogDensity = 0.000001f;
                 changed = true;
             }
 
-            if (ImGui::Button("Preset: Celest")) {
-                palette.terrainColors[0] = HexRGB(0x5aa8d8);
-                palette.terrainColors[1] = HexRGB(0xa4d8e5);
-                palette.terrainColors[2] = HexRGB(0xf9d4b4);
-                palette.terrainColors[3] = HexRGB(0xf1a76a);
-                palette.terrainColors[4] = HexRGB(0xd86f6f);
-                palette.grassColor = HexRGB(0x7f4b8b);
-                palette.waterColor = HexRGB(0x7f4b8b);
+            ImGui::SameLine();
+            if (ImGui::Button("Preset: Mint")) {
+                palette.terrainColors[0] = HexRGB(0xA8E6CF);
+                palette.terrainColors[1] = HexRGB(0xDDEDC4);
+                palette.terrainColors[2] = HexRGB(0xFFD4B8);
+                palette.terrainColors[3] = HexRGB(0xFFADAD);
+                palette.terrainColors[4] = HexRGB(0xFF667D);
+                palette.angleThresholds = vec4(20.0f, 50.0f, 70.0f, 130.0f);
+                palette.grassColor = HexRGB(0xA8E6CF);
+                palette.waterColor = HexRGB(0x72E1DA);
+                palette.skyColor = HexRGB(0xA6EDFD);
+                palette.fogDensity = 0.0000007f;
+                changed = true;
+            }
+            
+            if (ImGui::Button("Preset: Cherry")) {
+                palette.terrainColors[0] = HexRGB(0xF6E48E);
+                palette.terrainColors[1] = HexRGB(0xF8C391);
+                palette.terrainColors[2] = HexRGB(0xF67481);
+                palette.terrainColors[3] = HexRGB(0xC06D84);
+                palette.terrainColors[4] = HexRGB(0x6C5B80);
+                palette.angleThresholds = vec4(20.0f, 60.0f, 90.0f, 120.0f);
+                palette.grassColor = HexRGB(0xF67481);
+                palette.waterColor = HexRGB(0x91F1E0);
+                palette.skyColor = HexRGB(0x46E0B7);
+                palette.fogDensity = 0.000001f;
+                changed = true;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Preset: Volcano")) {
+                palette.terrainColors[0] = HexRGB(0x43474C);
+                palette.terrainColors[1] = HexRGB(0x151618);
+                palette.terrainColors[2] = HexRGB(0x522A27);
+                palette.terrainColors[3] = HexRGB(0xC73E1D);
+                palette.terrainColors[4] = HexRGB(0xE0BE36);
+                palette.angleThresholds = vec4(20.0f, 60.0f, 90.0f, 130.0f);
+                palette.grassColor = HexRGB(0x3A4936);
+                palette.waterColor = HexRGB(0x3E6562);
+                palette.skyColor = HexRGB(0xFF7100);
+                palette.fogDensity = 0.0000016f;
+                changed = true;
+            }
+
+            if (ImGui::Button("Preset: Alien")) {
+                palette.terrainColors[0] = HexRGB(0x4D6AFF);
+                palette.terrainColors[1] = HexRGB(0x9A5CFF);
+                palette.terrainColors[2] = HexRGB(0xFF57B9);
+                palette.terrainColors[3] = HexRGB(0xFFEC70);
+                palette.terrainColors[4] = HexRGB(0x00FF9D);
+                palette.angleThresholds = vec4(20.0f, 50.0f, 100.0f, 150.0f);
+                palette.grassColor = HexRGB(0x4D6AFF);
+                palette.waterColor = HexRGB(0x41B0EC);
+                palette.skyColor = HexRGB(0xB977E1);
+                palette.fogDensity = 0.000001f;
+                changed = true;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Preset: Anime")) {
+                palette.terrainColors[0] = HexRGB(0xFF6E61);
+                palette.terrainColors[1] = HexRGB(0xFFB84D);
+                palette.terrainColors[2] = HexRGB(0x6D9DC5);
+                palette.terrainColors[3] = HexRGB(0x5E4B8B);
+                palette.terrainColors[4] = HexRGB(0xDA1B61);
+                palette.angleThresholds = vec4(20.0f, 50.0f, 70.0f, 130.0f);
+                palette.grassColor = HexRGB(0x7F9459);
+                palette.waterColor = HexRGB(0x3CD4E2);
+                palette.skyColor = HexRGB(0xFFFA4D);
+                palette.fogDensity = 0.00000075f;
+                changed = true;
+            }
+
+            if (ImGui::Button("Preset: Neon")) {
+                palette.terrainColors[0] = HexRGB(0x04E762);
+                palette.terrainColors[1] = HexRGB(0xF5B700);
+                palette.terrainColors[2] = HexRGB(0xDC0073);
+                palette.terrainColors[3] = HexRGB(0x008BF8);
+                palette.terrainColors[4] = HexRGB(0x89FC00);
+                palette.angleThresholds = vec4(20.0f, 50.0f, 100.0f, 140.0f);
+                palette.grassColor = HexRGB(0x22E594);
+                palette.waterColor = HexRGB(0x4AC6A5);
+                palette.skyColor = HexRGB(0x2DE5EB);
+                palette.fogDensity = 0.0000005f;
+                changed = true;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Preset: Harmony")) {
+                palette.terrainColors[0] = HexRGB(0xF4F1DE);
+                palette.terrainColors[1] = HexRGB(0xE07A5F);
+                palette.terrainColors[2] = HexRGB(0x3D405B);
+                palette.terrainColors[3] = HexRGB(0x81B29A);
+                palette.terrainColors[4] = HexRGB(0xF2CC8F);
+                palette.angleThresholds = vec4(30.0f, 60.0f, 100.0f, 140.0f);
+                palette.grassColor = HexRGB(0x81B29A);
+                palette.waterColor = HexRGB(0x4AC6A5);
+                palette.skyColor = HexRGB(0x7FE9CC);
+                palette.fogDensity = 0.0000012f;
                 changed = true;
             }
 
             if (ImGui::Button("Reset to Defaults")) {
                 SetDefaults();
-                changed = true;
             }
         }
 
