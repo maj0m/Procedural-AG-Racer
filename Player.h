@@ -49,7 +49,7 @@ class Player {
 
 public:
     Player(Camera* camera, ChunkManager* chunkManager) : camera(camera), chunkManager(chunkManager) {       
-        playerObject = new Object(new ObjectShader(), new ShipGeometry());
+        playerObject = new Object(new ObjectShader(), new ShipGeometry(4.0f, 8));
         collisionComputeShader = new CollisionComputeShader();
 
         pos = chunkManager->getSpawnPoint();
@@ -181,11 +181,15 @@ public:
     }
 
     void Draw(RenderState& state) {
-       playerObject->Draw(state);
+      playerObject->Draw(state);
     }
 
     void Respawn() {
         pos = chunkManager->getSpawnPoint();
         vel = vec3(0, 0, 0);
+    }
+
+    vec3 getPos() const {
+        return pos;
     }
 };

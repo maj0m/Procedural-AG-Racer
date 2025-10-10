@@ -1,22 +1,23 @@
 #pragma once
 #include "geometry.h"
+#include "MeshGenerator.h"
 
 class PlaneGeometry : public Geometry {
-    float scale;
-    int tesselation;
+    float scale = 1.0f;
+    int tesselation = 32;
+
 public:
-
-
-    PlaneGeometry(int _tesselation, float _scale) {
-        scale = _scale;
-        tesselation = _tesselation;
-        create(tesselation, tesselation);
+    PlaneGeometry(float scale, int tesselation) : scale(scale), tesselation(tesselation) {
+        ParametricMeshGenerator meshGen(tesselation, [this](float u, float v) { return this->eval(u, v); });
+        std::vector<vec3> vtxData;
+        meshGen.generate(vtxData);
+        init(vtxData); // upload to GPU
     }
 
-    void eval(float u, float v, vec3& pos) {
+    vec3 eval(float u, float v) const {
         float U = (u - 0.5f) * scale;
         float V = (v - 0.5f) * scale;
 
-        pos = vec3(U, 0, V);
+        return vec3(U, 0, V);
     }
 };

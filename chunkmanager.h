@@ -39,7 +39,7 @@ public:
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
         trackManager = new TrackManager(terrainData.seed);
         waterShader = new WaterShader();
-        waterGeometry = new PlaneGeometry(tesselation * (2 * renderDistance + 1), chunkSize * (2 * renderDistance + 1));
+        waterGeometry = new PlaneGeometry(chunkSize * (2 * renderDistance + 1), tesselation * (2 * renderDistance + 1));
         waterObject = new Object(waterShader, waterGeometry);
 
         // Create shared VAO for all chunks

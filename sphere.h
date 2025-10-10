@@ -1,16 +1,20 @@
 #pragma once
 #include "geometry.h"
+#include "MeshGenerator.h"
 
 class SphereGeometry : public Geometry {
-public:
-	int tesselation = 20;
-	float scale = 1;
+	float scale = 1.0f;
+	int tesselation = 32;
 
-	SphereGeometry() {
-		create(tesselation, tesselation);
+public:
+	SphereGeometry(float scale, int tesselation) : scale(scale), tesselation(tesselation) {
+		ParametricMeshGenerator meshGen(tesselation, [this](float u, float v) { return this->eval(u, v); });
+		std::vector<vec3> vtxData;
+		meshGen.generate(vtxData);
+		init(vtxData); // upload to GPU
 	}
 
-	void eval(float u, float v, vec3& pos) {
+	vec3 eval(float u, float v) const {
 		float U = u * 2.0f * M_PI;
 		float V = v * M_PI;
 
@@ -18,6 +22,6 @@ public:
 		float Y = scale * sinf(U) * sinf(V);
 		float Z = scale * -cosf(V);
 
-		pos = vec3(X, Y, Z);
+		return vec3(X, Y, Z);
 	}
 };
