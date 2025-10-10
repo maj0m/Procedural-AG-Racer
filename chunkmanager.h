@@ -164,7 +164,6 @@ public:
     void DrawChunks(RenderState& state, Camera& camera) {
         glBindVertexArray(vao);
         
-        glEnable(GL_CULL_FACE);
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
             vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
@@ -174,7 +173,6 @@ public:
         }
 
         waterObject->Draw(state);
-        glDisable(GL_CULL_FACE);
     }
 
     void updateTerrainUBO() {
