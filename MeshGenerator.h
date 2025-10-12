@@ -115,8 +115,8 @@ struct SdfMeshGenerator : MeshGenerator {
 
                         // Add vertices
                         vtxData.push_back(v0);
-                        vtxData.push_back(v1);
                         vtxData.push_back(v2);
+                        vtxData.push_back(v1);
                     }
                 }
             }

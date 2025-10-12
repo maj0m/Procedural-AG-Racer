@@ -32,6 +32,7 @@ static void getFPS(int& fps) {
 }
 
 
+
 void clamp(float& x, float min_value, float max_value) {
 	x = min(max_value, max(x, min_value));
 }
@@ -43,6 +44,11 @@ float radians(float degrees) {
 template <typename T>
 T mix(const T& start, const T& end, float alpha) {
 	return start + alpha * (end - start);
+}
+
+// -1 for negative, 0 for 0, +1 for positive
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
 }
 
 static float getTime() {
@@ -161,14 +167,14 @@ inline vec4 HexRGBA(uint32_t rgba) {
 	return vec4(r, g, b, a);
 }
 
-struct mat4 { // column-major storage: cols[0..3]
+struct mat4 { // column-major
 	vec4 cols[4];
 	mat4() { cols[0] = vec4(1, 0, 0, 0); cols[1] = vec4(0, 1, 0, 0); cols[2] = vec4(0, 0, 1, 0); cols[3] = vec4(0, 0, 0, 1); }
 	mat4(const vec4& c0, const vec4& c1, const vec4& c2, const vec4& c3) { cols[0] = c0; cols[1] = c1; cols[2] = c2; cols[3] = c3; }
 
-	vec4& operator[](int i) { return cols[i]; }          // column access
+	vec4& operator[](int i) { return cols[i]; }
 	vec4  operator[](int i) const { return cols[i]; }
-	operator const float* () const { return (const float*)this; } // contiguous, column-major
+	operator const float* () const { return (const float*)this; }
 };
 
 // mat * vec (column vector)
@@ -178,7 +184,6 @@ inline vec4 operator*(const mat4& M, const vec4& v) {
 
 // mat * mat
 inline mat4 operator*(const mat4& A, const mat4& B) {
-	// Columns of result are A * B's columns
 	return mat4(A * B[0], A * B[1], A * B[2], A * B[3]);
 }
 
@@ -205,7 +210,6 @@ inline mat4 RotationMatrix(float angle, vec3 w) {
 	float c = cosf(angle), s = sinf(angle);
 	w = normalize(w);
 	float x = w.x, y = w.y, z = w.z;
-	// Columns (not rows): standard Rodrigues form for column-major
 	return mat4(
 		vec4(c + (1 - c) * x * x, (1 - c) * x * y + s * z, (1 - c) * x * z - s * y, 0),
 		vec4((1 - c) * y * x - s * z, c + (1 - c) * y * y, (1 - c) * y * z + s * x, 0),
@@ -276,7 +280,6 @@ struct Quaternion {
 	}
 
 	static Quaternion fromRotationMatrix(const mat4& m) {
-		// read rotation from columns m[0..2]
 		float m00 = m[0].x, m01 = m[1].x, m02 = m[2].x;
 		float m10 = m[0].y, m11 = m[1].y, m12 = m[2].y;
 		float m20 = m[0].z, m21 = m[1].z, m22 = m[2].z;
@@ -339,3 +342,18 @@ inline bool pointInAABB(const vec3& p, const AABB& b) {
 		(p.z >= b.min.z && p.z <= b.max.z);
 }
 
+uint32_t hash3(const vec3& v) {
+	int32_t xi = (int32_t)std::floor(v.x);
+	int32_t yi = (int32_t)std::floor(v.y);
+	int32_t zi = (int32_t)std::floor(v.z);
+
+	uint32_t x = (uint32_t)xi;
+	uint32_t y = (uint32_t)yi;
+	uint32_t z = (uint32_t)zi;
+
+	uint32_t h = x * 73856093u ^ y * 19349663u ^ z * 83492791u; // 3D spatial hash
+	h ^= h >> 16; h *= 0x7FEB352Du;
+	h ^= h >> 15; h *= 0x846CA68Bu;
+	h ^= h >> 16;
+	return h;
+}

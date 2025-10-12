@@ -95,7 +95,7 @@ public:
 		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(256.0f, 8, terrainData);
 		camera = new Camera();
-		camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0, 20.0, 0.0));
+		camera->setEyePos(chunkManager->getSpawnPoint());
 		player = new Player(camera, chunkManager);
 	}
 
@@ -153,7 +153,7 @@ public:
 				player->Respawn();
 			}
 			else {
-				camera->setEyePos(chunkManager->getSpawnPoint() + vec3(0.0f, 20.0f, 0.0f));
+				camera->setEyePos(chunkManager->getSpawnPoint());
 			}
 		}
 

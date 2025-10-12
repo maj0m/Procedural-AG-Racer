@@ -33,6 +33,8 @@ public:
 		glDeleteVertexArrays(1, &vao);
 	}
 
+	// Getters
 	GLuint getVAO() const { return vao; }
+	GLuint getVBO()  const { return vbo; }
 	GLsizei getVertexCount() const { return vertexCount; }
 };

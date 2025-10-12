@@ -1,6 +1,5 @@
 #pragma once
 #include "computeshader.h"
-#include <iostream>
 
 class CollisionComputeShader : public ComputeShader {
     GLuint collisionBuffer;
@@ -33,6 +32,6 @@ public:
 
 
     ~CollisionComputeShader() {
-
+        if (collisionBuffer) glDeleteBuffers(1, &collisionBuffer);
     }
 };

@@ -22,15 +22,13 @@ public:
 		state.MVP = state.P * state.V * state.M;
 		shader->Bind(state);
 
-		// Disable depth testing and cull outside of dome
+		// Disable depth testing
 		glDepthMask(GL_FALSE);
 		glDisable(GL_DEPTH_TEST);
-		glCullFace(GL_FRONT);
 
 		geometry->Draw();
 
 		// Revert after drawing
-		glCullFace(GL_BACK);
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
 	}
