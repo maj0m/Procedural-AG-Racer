@@ -11,14 +11,12 @@
 #include "Player.h"
 #include "SharedResources.h"
 #include "WorldConfig.h"
+#include "FPSCounter.h"
 
 enum class ControlMode { Freecam, Player };
 
 class Scene {
-	float avgFPS = 0.0f;
-	int totalFrames = 0;
-	float startTime;
-	float lastFrameTime = 0.0f;
+	FPSCounter fpsCounter;
 	RenderState state;
 	TerrainData terrainData;
 	ChunkManager* chunkManager;
@@ -32,7 +30,7 @@ class Scene {
 	WorldConfig cfg;
 
 	void updateState(RenderState& state) {
-		state.time = getTime();
+		state.time = glfwGetTime();
 
 		state.M = mat4();
 		state.V = camera->V();
@@ -47,14 +45,11 @@ class Scene {
 public:
 
 	void Render() {
-		float currentTime = glfwGetTime();
-		if (lastFrameTime == 0.0f) lastFrameTime = currentTime;
-		float deltaTime = currentTime - lastFrameTime;
-		lastFrameTime = currentTime;
-		totalFrames++;
-		avgFPS = (float)totalFrames / (currentTime - startTime);
-
 		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+		// FPS
+		fpsCounter.update();
+		float deltaTime = fpsCounter.getDeltaTime();
 
 		// Update state
 		updateState(state);
@@ -74,8 +69,6 @@ public:
 	}
 
 	void Build() {
-		startTime = glfwGetTime();
-
 		// Color palette
 		palette = new ColorPalette();
 
@@ -142,8 +135,7 @@ public:
 		}
 
 		// FPS and Coordinates
-		getFPS(fps);
-		ImGui::Text("FPS: %d, AVG: %.1f", fps, avgFPS);
+		ImGui::Text("FPS: %d, AVG: %.1f", fpsCounter.getFPS(), fpsCounter.getAverageFPS());
 		ImGui::Text("X: %.1f, Y: %.1f, Z: %.1f", camera->getEyePos().x, camera->getEyePos().y, camera->getEyePos().z);
 
 		// Color Palette

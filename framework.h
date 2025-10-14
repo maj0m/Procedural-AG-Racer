@@ -16,23 +16,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
-int fps;
-int frameCount = 0;
-float previousTime = glfwGetTime();
-
-static void getFPS(int& fps) {
-	float currentTime = glfwGetTime();
-	frameCount++;
-	if (currentTime - previousTime >= 1.0) {
-		fps = frameCount;
-		frameCount = 0;
-		previousTime = currentTime;
-	}
-}
-
-
-
 void clamp(float& x, float min_value, float max_value) {
 	x = min(max_value, max(x, min_value));
 }
