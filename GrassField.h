@@ -23,7 +23,6 @@ public:
     size_t instanceCount = 0;   // final instance count after compute shader
     size_t capacity = 0;        // max attempts / capacity passed to compute shader
     Shader* shader = new GrassShader();
-    Material* grassMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 10.0);
     GrassScatterComputeShader scatterComputeShader;
 
 
@@ -113,7 +112,6 @@ public:
     void Draw(RenderState& state) {
         state.M = mat4();
         state.MVP = state.P * state.V * state.M;
-        state.material = grassMaterial;
 
         // set uniforms & draw
         shader->Bind(state);

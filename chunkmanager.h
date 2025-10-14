@@ -23,7 +23,6 @@ private:
 
     SharedResources* resources = nullptr;
 
-    Material* terrainMaterial = nullptr;
     Object* waterObject = nullptr;
 
     WorldConfig* cfg;
@@ -33,8 +32,6 @@ private:
 
 public:
     ChunkManager(WorldConfig* cfg, SharedResources* resources): cfg(cfg), resources(resources) {
-        terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
-
         trackManager = new TrackManager(cfg->terrain.seed);
 
         waterObject = new Object(resources->waterShader, resources->waterGeom);
@@ -57,7 +54,6 @@ public:
     ~ChunkManager() {
         if (vao) glDeleteVertexArrays(1, &vao);
         if (terrainUBO) glDeleteBuffers(1, &terrainUBO);
-        delete terrainMaterial;
         delete trackManager;
         delete waterObject;
     }
@@ -69,7 +65,7 @@ public:
 
     void LoadChunk(const vec3& id) {
         if (chunkMap.find(id) != chunkMap.end()) return; // already loaded
-        chunkMap.emplace(id, std::make_unique<Chunk>(id, cfg, resources, terrainMaterial, trackManager));
+        chunkMap.emplace(id, std::make_unique<Chunk>(id, cfg, resources, trackManager));
     }
 
     void UnloadChunk(const vec3& id) {

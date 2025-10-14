@@ -2,8 +2,10 @@
 precision highp float;
 
 struct Material {
-	vec3 kd, ks, ka;
-	float shininess;
+    vec4 kd;
+    vec4 ks;
+    vec4 ka;
+    vec4 shininess_pad;
 };
 
 layout(std140, binding = 2) uniform Lighting {
@@ -11,6 +13,13 @@ layout(std140, binding = 2) uniform Lighting {
     vec4 u_lightLa;
     vec4 u_lightLe;
 };
+
+layout(std140, binding = 6) uniform Materials {
+    Material materials[16];
+};
+
+#define MAT_WATER 2
+#define material (materials[MAT_WATER])
 
 layout(std140, binding = 7) uniform ColorPalette {
     vec4 terrainColors[5];
@@ -21,8 +30,6 @@ layout(std140, binding = 7) uniform ColorPalette {
     vec4 atmosphereColor;
     float fogDensity;
 };
-
-uniform Material material;
 
 in float waterDepth;
 in float wDist;
@@ -43,7 +50,7 @@ void main() {
 	float NdotL = max(dot(N, L), 0.0);
 	float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
-	float spec = pow(NdotH, material.shininess) * NdotL;
+	float spec = pow(NdotH, material.shininess_pad.x) * NdotL;
 
 	vec3 texColor = waterColor.xyz;
 
@@ -53,10 +60,11 @@ void main() {
 		texColor = foamColor;
 	}
 
-    vec3 direct  = (material.kd * texColor * NdotL + material.ks * spec) * u_lightLe.xyz;
-    vec3 ambient = material.ka * texColor * u_lightLa.xyz;
+    vec3 ambient = material.ka.xyz * texColor * u_lightLa.xyz;
+	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
+	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
-    vec3 radiance = ambient + direct;
+    vec3 radiance = ambient + diffuse + specular;
 
     // Base sky gradient
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);

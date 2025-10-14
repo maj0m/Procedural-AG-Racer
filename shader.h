@@ -118,18 +118,5 @@ public:
 		if (location >= 0) glUniformMatrix4fv(location, 1, GL_FALSE, mat);
 	}
 
-	void setUniformMaterial(const Material& material, const std::string& name) {
-		setUniform(material.kd, name + ".kd");
-		setUniform(material.ks, name + ".ks");
-		setUniform(material.ka, name + ".ka");
-		setUniform(material.shininess, name + ".shininess");
-	}
-
-	void setUniformLight(const Light& L, const std::string& name) {
-		setUniform(L.data.la, name + ".La");
-		setUniform(L.data.le, name + ".Le");
-		setUniform(L.data.dir, name + ".dir");
-	}
-
 	~Shader() { if (shaderProgramId > 0) glDeleteProgram(shaderProgramId); }
 };

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "framework.h"
 #include "camera.h"
 #include "renderstate.h"
@@ -12,6 +11,7 @@
 #include "SharedResources.h"
 #include "WorldConfig.h"
 #include "FPSCounter.h"
+#include "material.h"
 
 enum class ControlMode { Freecam, Player };
 
@@ -25,7 +25,7 @@ class Scene {
 	SkyDome* skyDome;
 	Player* player;
 	ControlMode controlMode = ControlMode::Freecam;
-
+	MaterialUBO materialsUBO;
 	SharedResources resources;
 	WorldConfig cfg;
 
@@ -71,6 +71,18 @@ public:
 	void Build() {
 		// Color palette
 		palette = new ColorPalette();
+
+		// Materials
+		Material terrainMat{ vec4(0.5f,0.5f,0.5f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(1.0f) };
+		Material grassMat{ vec4(0.5f,0.5f,0.5f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(8.0f) };
+		Material waterMat{ vec4(0.5f,0.5f,0.5f,0.0f), vec4(0.8f,0.8f,0.8f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(100.0f) };
+		Material objMat{ vec4(0.5f,0.5f,0.5f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(0.4f,0.4f,0.4f,0.0f), vec4(1.0f) };
+
+		materialsUBO.init();
+		materialsUBO.set(0, terrainMat);
+		materialsUBO.set(1, grassMat);
+		materialsUBO.set(2, waterMat);
+		materialsUBO.set(3, objMat);
 
 		// Sun
 		Light sun;

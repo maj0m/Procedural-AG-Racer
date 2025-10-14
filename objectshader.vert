@@ -7,11 +7,12 @@ uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
 
 out vec3 wView;
+out float wDist;
 
 void main() {
 	gl_Position = MVP * vec4(vtxPos, 1.0);
 
 	vec4 wPos = M * vec4(vtxPos, 1);
-
 	wView  = wEye - wPos.xyz;
+	wDist = length(wView);
 }

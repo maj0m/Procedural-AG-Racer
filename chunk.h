@@ -3,7 +3,6 @@
 #include "framework.h"
 #include "lut.h"
 #include "shader.h"
-#include "material.h"
 #include "renderstate.h"
 #include "MarchingCubesCS.h"
 #include <vector>
@@ -23,7 +22,6 @@ protected:
     WorldConfig* cfg = nullptr;
     SharedResources* resources = nullptr;
 
-    Material* material = nullptr;
     unsigned int vbo = 0;
 
     unsigned int maxVertices = 0;
@@ -35,8 +33,8 @@ protected:
     std::unique_ptr<InstanceField> cactusField;
 
 public:
-    Chunk(vec3 id, WorldConfig* cfg, SharedResources* resources, Material* material, TrackManager* trackManager)
-        : id(id), cfg(cfg), resources(resources), material(material) {
+    Chunk(vec3 id, WorldConfig* cfg, SharedResources* resources, TrackManager* trackManager)
+        : id(id), cfg(cfg), resources(resources) {
 
         // Build per-chunk list of road segments
         std::vector<int> indices;
@@ -84,7 +82,6 @@ public:
     void Draw(RenderState& state) {
         state.M = mat4();
         state.MVP = state.P * state.V * state.M;
-        state.material = material;
         state.chunkId = id;
         state.chunkSize = cfg->chunkSize;
 

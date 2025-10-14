@@ -16,6 +16,5 @@ public:
 		setUniform(state.V, "V");
 		setUniform(state.P, "P");
 		setUniform(state.wEye, "wEye");
-		setUniformMaterial(*state.material, "material");
 	}
 };

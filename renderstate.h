@@ -1,6 +1,5 @@
 #pragma once
 #include "framework.h"
-#include "material.h"
 #include "light.h"
 
 struct RenderState {
@@ -9,7 +8,6 @@ struct RenderState {
 	vec3 wFront;
 	vec3 wUp;
 	mat4 MVP, M, V, P;
-	Material* material;
 	vec3 chunkId;
 	float chunkSize;
 };

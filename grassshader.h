@@ -16,6 +16,5 @@ public:
 		setUniform(state.time, "u_time");
 		setUniform(state.MVP, "MVP");
 		setUniform(state.wEye, "wEye");
-		setUniformMaterial(*state.material, "material");
 	}
 };
