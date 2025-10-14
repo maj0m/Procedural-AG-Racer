@@ -98,6 +98,7 @@ struct vec3 {
 	void operator*=(float a) { x *= a; y *= a; z *= a; }
 	void operator/=(float a) { x /= a; y /= a; z /= a; }
 	bool operator==(const vec3& right) { return x == right.x && y == right.y && z == right.z; }
+	bool operator!=(const vec3& right) { return !(*this == right); }
 	
 };
 

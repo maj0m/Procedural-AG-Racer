@@ -55,7 +55,7 @@ public:
         // Header + Payload
         const GLsizeiptr headerSize = 16; // 4 uints = 16 bytes
         const GLsizeiptr bufferSize = headerSize + GLsizeiptr(capacity) * sizeof(GrassInstance);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
 
         // Zero the atomic counter at offset 0
         GLuint zero = 0;
@@ -116,19 +116,10 @@ public:
         state.MVP = state.P * state.V * state.M;
         state.material = grassMaterial;
 
-        // save previous state
-        GLint prevVAO = 0, prevProgram = 0;
-        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prevVAO);
-        glGetIntegerv(GL_CURRENT_PROGRAM, &prevProgram);
-
         // set uniforms & draw
         shader->Bind(state);
         glBindVertexArray(vao);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei)instanceCount);
-
-        // restore state
-        glBindVertexArray(prevVAO);
-        glUseProgram(prevProgram);
     }
 
     void destroy() {
