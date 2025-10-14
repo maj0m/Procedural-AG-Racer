@@ -9,11 +9,16 @@
 #include "colorpalette.h"
 #include "SkyDome.h"
 #include "Player.h"
+#include "SharedResources.h"
+#include "WorldConfig.h"
 
 enum class ControlMode { Freecam, Player };
 
 class Scene {
-	float lastFrameTime = 0.0;
+	float avgFPS = 0.0f;
+	int totalFrames = 0;
+	float startTime;
+	float lastFrameTime = 0.0f;
 	RenderState state;
 	TerrainData terrainData;
 	ChunkManager* chunkManager;
@@ -22,6 +27,9 @@ class Scene {
 	SkyDome* skyDome;
 	Player* player;
 	ControlMode controlMode = ControlMode::Freecam;
+
+	SharedResources resources;
+	WorldConfig cfg;
 
 	void updateState(RenderState& state) {
 		state.time = getTime();
@@ -43,6 +51,8 @@ public:
 		if (lastFrameTime == 0.0f) lastFrameTime = currentTime;
 		float deltaTime = currentTime - lastFrameTime;
 		lastFrameTime = currentTime;
+		totalFrames++;
+		avgFPS = (float)totalFrames / (currentTime - startTime);
 
 		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -64,6 +74,8 @@ public:
 	}
 
 	void Build() {
+		startTime = glfwGetTime();
+
 		// Color palette
 		palette = new ColorPalette();
 
@@ -92,8 +104,27 @@ public:
 		terrainData.seed = 310;
 		terrainData.waterLevel = 16.0f;
 
+		// World Config
+		cfg.chunkSize = 256.0f;
+		cfg.renderDist = 8;
+		cfg.tesselation = 32;
+		cfg.terrain = terrainData;
+
+		// Shared Shaders
+		resources.terrainShader		= new TerrainShader();
+		resources.waterShader		= new WaterShader();
+		resources.instanceShader	= new InstanceShader();
+		resources.marchingCubesCS	= new MarchingCubesCS();
+		resources.groundDistanceCS	= new GroundDistanceCS();
+		resources.terrainHeightCS	= new TerrainHeightCS();
+
+		// Shared Geometries
+		resources.waterGeom		= new PlaneGeometry(cfg.chunkSize * (2 * cfg.renderDist + 1), cfg.tesselation * (2 * cfg.renderDist + 1));
+		resources.cactusGeom	= new CactusGeometry(40.0f, 32);
+		
+
 		skyDome = new SkyDome();
-		chunkManager = new ChunkManager(256.0f, 8, terrainData);
+		chunkManager = new ChunkManager(&cfg, &resources);
 		camera = new Camera();
 		camera->setEyePos(chunkManager->getSpawnPoint());
 		player = new Player(camera, chunkManager);
@@ -112,7 +143,7 @@ public:
 
 		// FPS and Coordinates
 		getFPS(fps);
-		ImGui::Text("FPS: %d", fps);
+		ImGui::Text("FPS: %d, AVG: %.1f", fps, avgFPS);
 		ImGui::Text("X: %.1f, Y: %.1f, Z: %.1f", camera->getEyePos().x, camera->getEyePos().y, camera->getEyePos().z);
 
 		// Color Palette
@@ -167,4 +198,25 @@ public:
 	void setCameraFirstMouse() {
 		if (controlMode == ControlMode::Freecam) camera->setFirstMouse();
 	}
+
+	~Scene() {
+		if (player) { delete player;        player = nullptr; }
+		if (chunkManager) { delete chunkManager;  chunkManager = nullptr; } // uses resources.*
+
+		if (skyDome) { delete skyDome;       skyDome = nullptr; }
+		if (camera) { delete camera;        camera = nullptr; }
+		if (palette) { delete palette;       palette = nullptr; }
+
+		if (resources.waterGeom) { delete resources.waterGeom;        resources.waterGeom = nullptr; }
+		if (resources.cactusGeom) { delete resources.cactusGeom;       resources.cactusGeom = nullptr; }
+
+		if (resources.terrainShader) { delete resources.terrainShader;    resources.terrainShader = nullptr; }
+		if (resources.waterShader) { delete resources.waterShader;      resources.waterShader = nullptr; }
+		if (resources.instanceShader) { delete resources.instanceShader;   resources.instanceShader = nullptr; }
+
+		if (resources.marchingCubesCS) { delete resources.marchingCubesCS;  resources.marchingCubesCS = nullptr; }
+		if (resources.groundDistanceCS) { delete resources.groundDistanceCS; resources.groundDistanceCS = nullptr; }
+		if (resources.terrainHeightCS) { delete resources.terrainHeightCS;  resources.terrainHeightCS = nullptr; }
+	}
+
 };
