@@ -23,10 +23,7 @@ public:
 	}
 
 	void Draw(RenderState& state) {
-		mat4 rotationMatrix = rotation.toRotationMatrix();
-		mat4 M = TranslateMatrix(pos) * rotationMatrix * ScaleMatrix(scale);
-
-		state.M = M;
+		state.M = TranslateMatrix(pos) * rotation.toRotationMatrix() * ScaleMatrix(scale);;
 		state.MVP = state.P * state.V * state.M;
 		state.material = material;
 		shader->Bind(state);

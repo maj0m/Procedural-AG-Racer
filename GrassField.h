@@ -111,8 +111,7 @@ public:
     }
 
     void Draw(RenderState& state) {
-        mat4 M = TranslateMatrix(vec3(0, 0, 0)) * RotationMatrix(0, vec3(0, 1, 0)) * ScaleMatrix(vec3(1, 1, 1));
-        state.M = M;
+        state.M = mat4();
         state.MVP = state.P * state.V * state.M;
         state.material = grassMaterial;
 

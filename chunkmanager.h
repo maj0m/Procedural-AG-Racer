@@ -115,12 +115,12 @@ public:
         KickChunkLoading();
     }
 
-    bool isChunkVisible(const vec3& center, float chunkSize, const std::vector<vec4>& frustumPlanes, const vec3& cameraPos) {
+    bool isChunkVisible(const vec3& chunkPos, float chunkSize, const std::vector<vec4>& frustumPlanes, const vec3& cameraPos) {
         // Build AABB
         const float half = 0.5f * chunkSize;
         AABB box;
-        box.min = center - vec3(half, half, half);
-        box.max = center + vec3(half, half, half);
+        box.min = chunkPos;
+        box.max = chunkPos + vec3(chunkSize, chunkSize, chunkSize);
 
         // If the camera is inside the box, always draw
         if (pointInAABB(cameraPos, box)) return true;
@@ -169,8 +169,8 @@ public:
         
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
-            vec3 chunkCenter = pair.first * cfg->chunkSize + vec3(cfg->chunkSize / 2.0f, cfg->chunkSize / 2.0f, cfg->chunkSize / 2.0f);
-            if (isChunkVisible(chunkCenter, cfg->chunkSize, frustumPlanes, camera.getEyePos())) {
+            vec3 chunkPos = pair.first * cfg->chunkSize;
+            if (isChunkVisible(chunkPos, cfg->chunkSize, frustumPlanes, camera.getEyePos())) {
                 pair.second->Draw(state);
             }
         }
