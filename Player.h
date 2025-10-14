@@ -3,7 +3,7 @@
 #include "camera.h"
 #include "object.h"
 #include "objectshader.h"
-#include "collisioncomputeshader.h"
+#include "GroundDistanceCS.h"
 #include "ship.h"
 #include "chunkmanager.h"
 
@@ -11,7 +11,7 @@ class Player {
     Camera* camera;
     ChunkManager* chunkManager;
     Object* playerObject;
-    CollisionComputeShader* collisionComputeShader;
+    GroundDistanceCS* collisionComputeShader;
 
     vec3 pos;
     vec3 vel;
@@ -50,7 +50,7 @@ class Player {
 public:
     Player(Camera* camera, ChunkManager* chunkManager) : camera(camera), chunkManager(chunkManager) {       
         playerObject = new Object(new ObjectShader(), new ShipGeometry(4.0f, 8));
-        collisionComputeShader = new CollisionComputeShader();
+        collisionComputeShader = new GroundDistanceCS();
 
         pos = chunkManager->getSpawnPoint();
         vel = vec3(0, 0, 0);
@@ -76,7 +76,7 @@ public:
         
         GLuint segSSBO = 0, segCount = 0;
         chunkManager->getSegIndexForPos(pos, segSSBO, segCount);
-        collisionComputeShader->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
+        //collisionComputeShader->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
 
         // Gravity
         acc += gravity;

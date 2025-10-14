@@ -4,14 +4,14 @@
 #include<iostream>
 #include "terraindata.h"
 
-class VolumeComputeShader : public ComputeShader {
+class MarchingCubesCS : public ComputeShader {
 
     EdgeTableTexture* edgeTableTex = new EdgeTableTexture();
     TriTableTexture* triTableTex = new TriTableTexture();
 
 public:
-    VolumeComputeShader() {
-        create("mc.comp");
+    MarchingCubesCS() {
+        create("marching_cubes.comp");
     }
 
     void Dispatch(int workGroupsX, int workGroupsY, int workGroupsZ, vec3 chunkID, float chunkSize, int tesselation, int segIndexCount) {
@@ -45,7 +45,7 @@ public:
         }
     }
 
-    ~VolumeComputeShader() {
+    ~MarchingCubesCS() {
         delete edgeTableTex;
         delete triTableTex;
     }

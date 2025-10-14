@@ -8,7 +8,7 @@ struct TrackSegment {
 };
 
 layout(std430, binding = 0) buffer CollisionOutput {
-    float groundDist;
+    float terrainHeight;
 };
 
 // UBO set in ChunkManager
@@ -40,7 +40,7 @@ layout(std430, binding=5) readonly buffer TrackIdxBuf {
 };
 
 uniform vec3 pos;
-uniform float hoverHeight;
+uniform float maxHeight;
 uniform int u_segIndexCount;
 
 float isolevel = 0.0;
@@ -153,6 +153,18 @@ float trackMask(vec3 p) {
     return w;
 }
 
+bool insideTrack(vec3 p) {
+    for (uint k = 0; k < u_segIndexCount; ++k) {
+        uint idx = segIndices[k];
+        vec3 a = segments[idx].start_r.xyz;
+        float r = segments[idx].start_r.w;
+        vec3 b = segments[idx].end_pad.xyz;
+        if(sdCapsule(p, a, b, r) < 0.0) return true;
+    }
+
+    return false;
+}
+
 
 // ---------- Terrain density ----------
 float densityAt(vec3 pos) {    
@@ -171,14 +183,16 @@ float densityAt(vec3 pos) {
 }
 
 void main() {
+    terrainHeight = -1.0;
+    if(insideTrack(pos)) return;
+
     vec3 rayOrigin = pos;
     vec3 rayDirection = vec3(0.0, -1.0, 0.0); // ray pointing down
     float stepSize = 1.0;
-    float maxDistance = hoverHeight; // max distance to search for the ground
     float distanceTravelled = 0.0;
     bool hit = false;
 
-    while(distanceTravelled < maxDistance) {
+    while(distanceTravelled < maxHeight) {
         vec3 currentPosition = rayOrigin + distanceTravelled * rayDirection;
         float terrainIso = densityAt(currentPosition);
         if (terrainIso >= isolevel) {
@@ -189,9 +203,5 @@ void main() {
         distanceTravelled += stepSize;
     }
 
-    if (hit) {
-        groundDist = distanceTravelled;
-    } else {
-        groundDist = -1.0;
-    }
+    if (hit) terrainHeight = distanceTravelled;
 }

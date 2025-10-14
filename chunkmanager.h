@@ -10,6 +10,10 @@
 #include "terrainshader.h"
 #include "TrackManager.h"
 #include "watershader.h"
+#include "cactus.h"
+#include "TerrainHeightCS.h"
+#include "SharedResources.h"
+#include "WorldConfig.h"
 
 class ChunkManager {
 private:
@@ -17,31 +21,24 @@ private:
     std::vector<vec3> loadQueue;
     const int maxKicksPerFrame = 1;
 
-    Shader* terrainShader;
-    Material* terrainMaterial;
-    VolumeComputeShader* volumeComputeShader;
-    TerrainData terrainData;
-    unsigned int chunkSize;
-    unsigned int tesselation = 32;
-    int renderDistance;
+    SharedResources* resources = nullptr;
+
+    Material* terrainMaterial = nullptr;
+    Object* waterObject = nullptr;
+
+    WorldConfig* cfg;
     GLuint vao = 0;         // Shared VAO for all chunks
     GLuint terrainUBO = 0;  // Terrain UBO that any shader can access
-    TrackManager* trackManager;
-    
-    Shader* waterShader;
-    Geometry* waterGeometry;
-    Object* waterObject;
+    TrackManager* trackManager = nullptr;
 
 public:
-    ChunkManager(float chunkSize, int renderDistance, TerrainData terrainData) : chunkSize(chunkSize), renderDistance(renderDistance), terrainData(terrainData) {
-        terrainShader = new TerrainShader();
-        volumeComputeShader = new VolumeComputeShader();
+    ChunkManager(WorldConfig* cfg, SharedResources* resources): cfg(cfg), resources(resources) {
         terrainMaterial = new Material(vec3(0.5, 0.5, 0.5), vec3(0.4, 0.4, 0.4), vec3(0.4, 0.4, 0.4), 1.0);
-        trackManager = new TrackManager(terrainData.seed);
-        waterShader = new WaterShader();
-        waterGeometry = new PlaneGeometry(chunkSize * (2 * renderDistance + 1), tesselation * (2 * renderDistance + 1));
-        waterObject = new Object(waterShader, waterGeometry);
 
+        trackManager = new TrackManager(cfg->terrain.seed);
+
+        waterObject = new Object(resources->waterShader, resources->waterGeom);
+        
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -56,12 +53,13 @@ public:
         updateTerrainUBO();
     }
 
+
     ~ChunkManager() {
         if (vao) glDeleteVertexArrays(1, &vao);
         if (terrainUBO) glDeleteBuffers(1, &terrainUBO);
-        delete terrainShader;
-        delete volumeComputeShader;
         delete terrainMaterial;
+        delete trackManager;
+        delete waterObject;
     }
 
     void EnqueueChunk(const vec3& id) {
@@ -71,7 +69,7 @@ public:
 
     void LoadChunk(const vec3& id) {
         if (chunkMap.find(id) != chunkMap.end()) return; // already loaded
-        chunkMap.emplace(id, std::make_unique<Chunk>(id, chunkSize, tesselation, terrainShader, terrainMaterial, volumeComputeShader, trackManager));
+        chunkMap.emplace(id, std::make_unique<Chunk>(id, cfg, resources, terrainMaterial, trackManager));
     }
 
     void UnloadChunk(const vec3& id) {
@@ -89,24 +87,29 @@ public:
     }
 
     void Update(const vec3& cameraPos) {
-        vec3 currentChunk = vec3(floor(cameraPos.x / chunkSize), 0.0f, floor(cameraPos.z / chunkSize));
+        static vec3 lastChunkId = vec3(9999);
+        vec3 currentChunk = vec3(floor(cameraPos.x / cfg->chunkSize), 0.0f, floor(cameraPos.z / cfg->chunkSize));
 
-        for (int x = -renderDistance; x <= renderDistance; ++x) {
-            for (int z = -renderDistance; z <= renderDistance; ++z) {
-                EnqueueChunk(vec3(currentChunk.x + x, 0, currentChunk.z + z));
+        if (currentChunk != lastChunkId) {
+            for (int x = -static_cast<int>(cfg->renderDist); x <= static_cast<int>(cfg->renderDist); ++x) {
+                for (int z = -static_cast<int>(cfg->renderDist); z <= static_cast<int>(cfg->renderDist); ++z) {
+                    EnqueueChunk(vec3(currentChunk.x + x, 0, currentChunk.z + z));
+                }
             }
-        }
 
-        std::vector<vec3> chunksToUnload;
-        for (const auto& pair : chunkMap) {
-            vec3 id = pair.first;
-            if (abs(id.x - currentChunk.x) > renderDistance || abs(id.z - currentChunk.z) > renderDistance) {
-                chunksToUnload.push_back(id);
+            std::vector<vec3> chunksToUnload;
+            for (const auto& pair : chunkMap) {
+                vec3 id = pair.first;
+                if (abs(id.x - currentChunk.x) > static_cast<float>(cfg->renderDist) || abs(id.z - currentChunk.z) > static_cast<float>(cfg->renderDist)) {
+                    chunksToUnload.push_back(id);
+                }
             }
-        }
 
-        for (const vec3& id : chunksToUnload) {
-            UnloadChunk(id);
+            for (const vec3& id : chunksToUnload) {
+                UnloadChunk(id);
+            }
+
+            lastChunkId = currentChunk;
         }
 
         KickChunkLoading();
@@ -166,13 +169,13 @@ public:
         
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
-            vec3 chunkCenter = pair.first * chunkSize + vec3(chunkSize / 2.0f, chunkSize / 2.0f, chunkSize / 2.0f);
-            if (isChunkVisible(chunkCenter,chunkSize, frustumPlanes, camera.getEyePos())) {
+            vec3 chunkCenter = pair.first * cfg->chunkSize + vec3(cfg->chunkSize / 2.0f, cfg->chunkSize / 2.0f, cfg->chunkSize / 2.0f);
+            if (isChunkVisible(chunkCenter, cfg->chunkSize, frustumPlanes, camera.getEyePos())) {
                 pair.second->Draw(state);
             }
         }
 
-        waterObject->Draw(state);
+        if (waterObject) waterObject->Draw(state);
     }
 
     void updateTerrainUBO() {
@@ -195,22 +198,22 @@ public:
             int   seed;
             float waterLevel;
         } p{
-            terrainData.bedrockFrequency,
-            terrainData.bedrockAmplitude,
-            terrainData.frequency,
-            terrainData.frequencyMultiplier,
-            terrainData.amplitude,
-            terrainData.amplitudeMultiplier,
-            terrainData.floorLevel,
-            terrainData.blendFactor,
-            terrainData.warpFreq,
-            terrainData.warpAmp,
-            terrainData.warpStrength,
-            terrainData.warpFreqMult,
-            terrainData.warpAmpMult,
-            terrainData.warpOctaves,
-            terrainData.seed,
-            terrainData.waterLevel
+            cfg->terrain.bedrockFrequency,
+            cfg->terrain.bedrockAmplitude,
+            cfg->terrain.frequency,
+            cfg->terrain.frequencyMultiplier,
+            cfg->terrain.amplitude,
+            cfg->terrain.amplitudeMultiplier,
+            cfg->terrain.floorLevel,
+            cfg->terrain.blendFactor,
+            cfg->terrain.warpFreq,
+            cfg->terrain.warpAmp,
+            cfg->terrain.warpStrength,
+            cfg->terrain.warpFreqMult,
+            cfg->terrain.warpAmpMult,
+            cfg->terrain.warpOctaves,
+            cfg->terrain.seed,
+            cfg->terrain.waterLevel
         };
 
         glBindBuffer(GL_UNIFORM_BUFFER, terrainUBO);
@@ -225,7 +228,7 @@ public:
     }
 
     bool getSegIndexForPos(const vec3& worldPos, GLuint& outSSBO, GLuint& outCount) const {
-        vec3 id = vec3(floor(worldPos.x / chunkSize), 0.0f, floor(worldPos.z / chunkSize));
+        vec3 id = vec3(floor(worldPos.x / cfg->chunkSize), 0.0f, floor(worldPos.z / cfg->chunkSize));
         auto it = chunkMap.find(id);
         if (it == chunkMap.end()) { outSSBO = 0; outCount = 0; return false; }
         outSSBO = it->second->getSegIndexSSBO();
@@ -233,14 +236,10 @@ public:
         return true;
     }
 
-
-    // Getters
-    TerrainData getTerrainData() const { return terrainData; }
-
     // Setters
     void setTerrainData(const TerrainData& data) {
-        if (terrainData.seed != data.seed) trackManager->GenerateSegments(data.seed);
-        terrainData = data;
+        if (cfg->terrain.seed != data.seed) trackManager->GenerateSegments(data.seed);
+        cfg->terrain = data;
         updateTerrainUBO();
     }
 };

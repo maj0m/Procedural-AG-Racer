@@ -5,35 +5,42 @@
 #include "shader.h"
 #include "material.h"
 #include "renderstate.h"
-#include "volumecomputeshader.h"
+#include "MarchingCubesCS.h"
 #include <vector>
 #include "GrassField.h"
 #include "object.h"
 #include "plane.h"
 #include "terrainshader.h"
 #include "TrackManager.h"
+#include "InstanceField.h"
+#include "SharedResources.h"
+#include "WorldConfig.h"
 
 class Chunk {
 protected:
     vec3 id;
-    Shader* terrainShader;
-    Material* material;
+    
+    WorldConfig* cfg = nullptr;
+    SharedResources* resources = nullptr;
+
+    Material* material = nullptr;
     unsigned int vbo = 0;
-    float chunkSize;
-    unsigned int tesselation;
-    unsigned int maxVertices;
-    GLuint actualVertexCount;
-    GrassField* grassField;
+
+    unsigned int maxVertices = 0;
+    GLuint actualVertexCount = 0;
+
+    GrassField* grassField = nullptr;
     GLuint segIndexSSBO = 0;     // binding = 5
     GLuint segIndexCount = 0;    // small number per chunk
+    std::unique_ptr<InstanceField> cactusField;
 
 public:
-    Chunk(vec3 id, float chunkSize, unsigned int tesselation, Shader* terrainShader, Material* material, VolumeComputeShader* computeShader, TrackManager* trackManager)
-        : id(id), chunkSize(chunkSize), tesselation(tesselation), terrainShader(terrainShader), material(material) {
+    Chunk(vec3 id, WorldConfig* cfg, SharedResources* resources, Material* material, TrackManager* trackManager)
+        : id(id), cfg(cfg), resources(resources), material(material) {
 
         // Build per-chunk list of road segments
         std::vector<int> indices;
-        trackManager->GetSegmentsForChunk(id, chunkSize, indices);
+        trackManager->GetSegmentsForChunk(id, cfg->chunkSize, indices);
         segIndexCount = (GLuint)indices.size();
 
         glGenBuffers(1, &segIndexSSBO);
@@ -41,16 +48,16 @@ public:
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * segIndexCount, indices.data(), GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, segIndexSSBO);
 
-        grassField = new GrassField(24000, id, chunkSize, segIndexCount);
+        grassField = new GrassField(24000, id, cfg->chunkSize, segIndexCount);
 
-        maxVertices = tesselation * tesselation * tesselation * 15;
+        maxVertices = cfg->tesselation * cfg->tesselation * cfg->tesselation * 15;
         const GLsizeiptr headerSize = 16;
         const GLsizeiptr bufferSize = headerSize + sizeof(vec4) * maxVertices;
 
         // VBO
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
         
         // Zero header (vertexCount)
         GLuint zero = 0;
@@ -60,10 +67,12 @@ public:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
 
         // Dispatch
-        computeShader->Dispatch(tesselation / 8, tesselation / 8, tesselation / 8, id, chunkSize, tesselation, segIndexCount);
+        resources->marchingCubesCS->Dispatch(cfg->tesselation / 8, cfg->tesselation / 8, cfg->tesselation / 8, id, cfg->chunkSize, cfg->tesselation, segIndexCount);
         
         // Retrieve actual vertex count
         glGetNamedBufferSubData(vbo, 0, sizeof(GLuint), &actualVertexCount);
+
+        cactusField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->cactusGeom, resources->instanceShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
     }
 
     ~Chunk() {
@@ -78,12 +87,15 @@ public:
         state.MVP = state.P * state.V * state.M;
         state.material = material;
         state.chunkId = id;
-        state.chunkSize = chunkSize;
-        terrainShader->Bind(state);
+        state.chunkSize = cfg->chunkSize;
+
+        resources->terrainShader->Bind(state);
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbo);
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
+
         if(grassField) grassField->Draw(state);
+        if (cactusField)  cactusField->Draw(state);
     }
 
     // Getters
