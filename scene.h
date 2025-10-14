@@ -201,7 +201,7 @@ public:
 
 	~Scene() {
 		if (player) { delete player;        player = nullptr; }
-		if (chunkManager) { delete chunkManager;  chunkManager = nullptr; } // uses resources.*
+		if (chunkManager) { delete chunkManager;  chunkManager = nullptr; }
 
 		if (skyDome) { delete skyDome;       skyDome = nullptr; }
 		if (camera) { delete camera;        camera = nullptr; }

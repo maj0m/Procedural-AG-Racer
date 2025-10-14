@@ -76,7 +76,7 @@ public:
         
         GLuint segSSBO = 0, segCount = 0;
         chunkManager->getSegIndexForPos(pos, segSSBO, segCount);
-        //collisionComputeShader->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
+        collisionComputeShader->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
 
         // Gravity
         acc += gravity;
