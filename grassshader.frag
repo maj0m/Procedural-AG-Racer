@@ -60,7 +60,7 @@ void main() {
     vec3 texColor = grassColor.xyz + vShade * 0.25;
 
     vec3 ambient = material.ka.xyz * texColor * u_lightLa.xyz;
-	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
+	vec3 diffuse = material.kd.xyz * texColor * diff * u_lightLe.xyz;
 	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
     float shadowTerm = 1.0 - vShadow * 0.7; // 1 in light, 0 in shadow
