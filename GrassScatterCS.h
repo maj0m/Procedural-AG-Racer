@@ -1,9 +1,9 @@
 #pragma once
 #include "computeshader.h"
 
-class GrassScatterComputeShader : public ComputeShader {
+class GrassScatterCS : public ComputeShader {
 public:
-    GrassScatterComputeShader() {
+    GrassScatterCS() {
         create("grass_scatter.comp");
     }
 

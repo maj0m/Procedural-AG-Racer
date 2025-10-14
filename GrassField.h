@@ -3,7 +3,7 @@
 #include <random>
 #include "framework.h"
 #include "grassshader.h"
-#include "GrassScatterComputeShader.h"
+#include "GrassScatterCS.h"
 #include "TrackManager.h"
 
 
@@ -23,7 +23,7 @@ public:
     size_t instanceCount = 0;   // final instance count after compute shader
     size_t capacity = 0;        // max attempts / capacity passed to compute shader
     Shader* shader = new GrassShader();
-    GrassScatterComputeShader scatterComputeShader;
+    GrassScatterCS scatterCS;
 
 
     GrassField(size_t maxCount, vec3 chunkId, float chunkSize, int segIndexCount) {
@@ -64,7 +64,7 @@ public:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, instanceVBO);
         
         // Dispatch
-        scatterComputeShader.Dispatch((GLuint)capacity, chunkId, chunkSize, segIndexCount);
+        scatterCS.Dispatch((GLuint)capacity, chunkId, chunkSize, segIndexCount);
 
         // Ensure writes are visible before reading count / using as vertex source
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
