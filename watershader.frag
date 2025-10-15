@@ -70,6 +70,11 @@ void main() {
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);
     vec4 skyCol = mix(skyColor, atmosphereColor, t);
 
+    // Schlick's approximation
+    float R0 = 0.02;
+    float fresnel = R0 + (1.0 - R0) * pow(1.0 - NdotV, 5.0);
+    radiance = mix(radiance, skyCol.xyz, fresnel); 
+
 	// Fog
     float fogFactor = exp(-fogDensity * wDist * wDist);
     vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);

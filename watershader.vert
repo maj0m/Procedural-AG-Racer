@@ -109,7 +109,7 @@ float bedrockDensityAt(vec3 pos) {
 void main() {
 	
 	vtxPos = vertexPos + vec3(u_planeOriginXZ.x, u_waterLevel, u_planeOriginXZ.y);
-	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 8.0, vtxPos.z), 0.02, 2.0, 2.0, 0.5, 2);
+	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 10.0, vtxPos.z), 0.02, 2.0, 2.0, 0.5, 2);
 	waterDepth = bedrockDensityAt(vtxPos);
 
 	gl_Position = MVP * vec4(vtxPos, 1.0);
