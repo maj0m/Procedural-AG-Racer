@@ -14,6 +14,7 @@
 #include "InstanceField.h"
 #include "SharedResources.h"
 #include "WorldConfig.h"
+#include "trunkshader.h"
 
 class Chunk {
 protected:
@@ -30,7 +31,8 @@ protected:
     GrassField* grassField = nullptr;
     GLuint segIndexSSBO = 0;     // binding = 5
     GLuint segIndexCount = 0;    // small number per chunk
-    std::unique_ptr<InstanceField> cactusField;
+    std::unique_ptr<InstanceField> treeTrunkField;
+    std::unique_ptr<InstanceField> treeCrownField;
 
 public:
     Chunk(vec3 id, WorldConfig* cfg, SharedResources* resources, TrackManager* trackManager)
@@ -70,7 +72,8 @@ public:
         // Retrieve actual vertex count
         glGetNamedBufferSubData(vbo, 0, sizeof(GLuint), &actualVertexCount);
 
-        cactusField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->cactusGeom, resources->instanceShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
+        treeTrunkField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeTrunkGeom, new TrunkShader(), resources->terrainHeightCS, segIndexSSBO, segIndexCount);
+        treeCrownField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeCrownGeom, resources->instanceShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
     }
 
     ~Chunk() {
@@ -91,7 +94,8 @@ public:
         glDrawArrays(GL_TRIANGLES, 0, actualVertexCount);
 
         if(grassField) grassField->Draw(state);
-        if (cactusField)  cactusField->Draw(state);
+        if (treeTrunkField)  treeTrunkField->Draw(state);
+        if (treeCrownField)  treeCrownField->Draw(state);
     }
 
     // Getters

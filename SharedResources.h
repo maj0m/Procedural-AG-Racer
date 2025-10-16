@@ -17,4 +17,6 @@ struct SharedResources {
     // common geometries
     Geometry* waterGeom     = nullptr;
     Geometry* cactusGeom    = nullptr;
+    Geometry* treeTrunkGeom = nullptr;
+    Geometry* treeCrownGeom = nullptr;
 };

@@ -2,6 +2,7 @@
 
 #include "framework.h"
 #include <functional>
+#include <random>
 
 struct MeshGenerator {
     virtual ~MeshGenerator() = default;
@@ -127,5 +128,102 @@ struct SdfMeshGenerator : MeshGenerator {
         if (fabs(valp1 - valp2) < 0.00001) return p1;
         float mu = (isolevel - valp1) / (valp2 - valp1);
         return p1 + mu * (p2 - p1);
+    }
+};
+
+
+struct LeafCloudGenerator : MeshGenerator {
+    // Controls
+    int   leafCount;          // Max number of leaves
+    float radius;             // Half-size of the grid box
+    float sizeMin;
+    float sizeMax;
+    uint32_t seed;
+
+    std::function<float(vec3)> sdf;
+    int   gridRes;
+
+    LeafCloudGenerator(int leafCount, float radius, std::function<float(vec3)> sdf, int gridRes = 32, float sizeMin = 0.3f, float sizeMax = 0.8f, uint32_t seed = 1337u)
+        : leafCount(leafCount), radius(radius), sizeMin(sizeMin), sizeMax(sizeMax), seed(seed), sdf(std::move(sdf)), gridRes(gridRes) {}
+
+    static inline vec3 anyPerp(const vec3& n) {
+        vec3 t = (fabs(n.z) < 0.99f) ? vec3(0, 0, 1) : vec3(0, 1, 0);
+        return normalize(cross(t, n));
+    }
+    inline vec3 sdfNormal(vec3 pLocal) const {
+        const float e = 1e-2f;
+        float dx = sdf(pLocal + vec3(e, 0, 0)) - sdf(pLocal - vec3(e, 0, 0));
+        float dy = sdf(pLocal + vec3(0, e, 0)) - sdf(pLocal - vec3(0, e, 0));
+        float dz = sdf(pLocal + vec3(0, 0, e)) - sdf(pLocal - vec3(0, 0, e));
+        vec3 n = vec3(dx, dy, dz);
+        float L = length(n);
+        return (L > 0.0f) ? (n / L) : vec3(0, 1, 0);
+    }
+
+    void generate(std::vector<vec3>& outVerts) override {
+        outVerts.clear();
+        outVerts.reserve(leafCount * 3);
+
+        std::mt19937 rng(seed);
+        std::uniform_real_distribution<float> U(0.0f, 1.0f);
+        std::uniform_real_distribution<float> Size(sizeMin, sizeMax);
+
+        const vec3 bmin = vec3(-radius, - radius, -radius);
+        const vec3 bmax = vec3(+radius, + radius, +radius);
+        const vec3 dim = bmax - bmin;
+
+        const vec3  step = dim / float(gridRes);
+        const vec3  half = step * 0.5f; // center offset within each cell
+
+        std::vector<vec3> centers;
+        centers.reserve(gridRes * gridRes * gridRes / 4);
+
+        for (int ix = 0; ix < gridRes; ++ix) {
+            for (int iy = 0; iy < gridRes; ++iy) {
+                for (int iz = 0; iz < gridRes; ++iz) {
+                    vec3 pWorld = bmin + vec3(ix, iy, iz) * step + half;
+
+                    if (sdf(pWorld) < 0.0f) {
+                        vec3 jitter = vec3(U(rng) - 0.5f, U(rng) - 0.5f, U(rng) - 0.5f) * step * 0.8f;
+                        centers.push_back(pWorld + jitter);
+                    }
+                }
+            }
+        }
+
+        if (centers.empty()) {
+            return;
+        }
+
+        // Shuffle and pick up to leafCount centers
+        std::shuffle(centers.begin(), centers.end(), rng);
+        const int used = min(leafCount, (int)centers.size());
+
+        for (int i = 0; i < used; ++i) {
+            vec3 center = centers[i];
+
+            // Orientation (aligned to SDF normal)
+            vec3 n = sdfNormal(center);
+            vec3 uAxis = anyPerp(n);
+            vec3 vAxis = normalize(cross(n, uAxis));
+
+            // Random in-plane rotation
+            float theta = U(rng) * 2.0f * float(M_PI);
+            float c = cosf(theta), s = sinf(theta);
+            vec3 ux = uAxis * c + vAxis * s;
+            vec3 vx = -uAxis * s + vAxis * c;
+
+            // Leaf triangle
+            float side = Size(rng);
+            float d = side / sqrtf(3.0f);
+
+            vec3 v0 = center + d * (ux * 1.0f);
+            vec3 v1 = center + d * (-0.5f * ux + (sqrtf(3.0f) / 2.0f) * vx);
+            vec3 v2 = center + d * (-0.5f * ux - (sqrtf(3.0f) / 2.0f) * vx);
+
+            outVerts.push_back(v0);
+            outVerts.push_back(v1);
+            outVerts.push_back(v2);
+        }
     }
 };

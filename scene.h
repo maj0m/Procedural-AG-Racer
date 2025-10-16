@@ -12,6 +12,10 @@
 #include "WorldConfig.h"
 #include "FPSCounter.h"
 #include "material.h"
+#include "cactus.h"
+#include "tree.h"
+#include "trunk.h"
+#include "leaves.h"
 
 enum class ControlMode { Freecam, Player };
 
@@ -125,8 +129,10 @@ public:
 
 		// Shared Geometries
 		resources.waterGeom		= new PlaneGeometry(cfg.chunkSize * (2 * cfg.renderDist + 1), cfg.tesselation * (2 * cfg.renderDist + 1));
-		resources.cactusGeom	= new CactusGeometry(40.0f, 32);
-		
+
+		TreeParams treeParams;
+		resources.treeTrunkGeom	= new TrunkGeometry(200.0f, 64, treeParams);
+		resources.treeCrownGeom = new LeavesGeometry(10000, 200.0f, 42u, treeParams);
 
 		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(&cfg, &resources);

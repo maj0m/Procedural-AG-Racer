@@ -28,7 +28,7 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_warpAmpMult; 
     int u_warpOctaves;
     int u_seed;
-    float _pad4;
+    float u_waterLevel;
 };
 
 layout(std430, binding=4) readonly buffer TrackSegBuf {
@@ -185,6 +185,7 @@ float densityAt(vec3 pos) {
 void main() {
     terrainHeight = -1.0;
     if(insideTrack(pos)) return;
+    if(densityAt(pos) > isolevel) return;
 
     vec3 rayOrigin = pos;
     vec3 rayDirection = vec3(0.0, -1.0, 0.0); // ray pointing down
@@ -203,5 +204,6 @@ void main() {
         distanceTravelled += stepSize;
     }
 
-    if (hit) terrainHeight = distanceTravelled;
+    if (hit) terrainHeight = maxHeight - distanceTravelled;
+    if(terrainHeight < u_waterLevel) terrainHeight = -1.0;
 }
