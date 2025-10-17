@@ -13,9 +13,10 @@
 #include "FPSCounter.h"
 #include "material.h"
 #include "cactus.h"
-#include "tree.h"
 #include "trunk.h"
 #include "leaves.h"
+#include "trunkshader.h"
+#include "leafshader.h"
 
 enum class ControlMode { Freecam, Player };
 
@@ -98,12 +99,13 @@ public:
 		// Terrain Data
 		terrainData.bedrockFrequency = 0.003f;
 		terrainData.bedrockAmplitude = 16.0f;
-		terrainData.frequency = 0.0016f;
+		terrainData.frequency = 0.0012f;
 		terrainData.frequencyMultiplier = 2.0f;
-		terrainData.amplitude = 180.0f;
+		terrainData.amplitude = 200.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
-		terrainData.floorLevel = 25.0f;
-		terrainData.blendFactor = 24.0f;
+		terrainData.floorLevel = 20.0f;
+		terrainData.waterLevel = 18.0f;
+		terrainData.blendFactor = 32.0f;
 		terrainData.warpFreq = 0.001f;
 		terrainData.warpAmp = 12.0f;
 		terrainData.warpStrength = 30.0f;
@@ -111,7 +113,7 @@ public:
 		terrainData.warpAmpMult = 0.5f;
 		terrainData.warpOctaves = 6;
 		terrainData.seed = 310;
-		terrainData.waterLevel = 16.0f;
+		
 
 		// World Config
 		cfg.chunkSize = 256.0f;
@@ -123,6 +125,8 @@ public:
 		resources.terrainShader		= new TerrainShader();
 		resources.waterShader		= new WaterShader();
 		resources.instanceShader	= new InstanceShader();
+		resources.treeTrunkShader	= new TrunkShader();
+		resources.treeLeafShader	= new LeafShader();
 		resources.marchingCubesCS	= new MarchingCubesCS();
 		resources.groundDistanceCS	= new GroundDistanceCS();
 		resources.terrainHeightCS	= new TerrainHeightCS();
@@ -130,9 +134,11 @@ public:
 		// Shared Geometries
 		resources.waterGeom		= new PlaneGeometry(cfg.chunkSize * (2 * cfg.renderDist + 1), cfg.tesselation * (2 * cfg.renderDist + 1));
 
-		TreeParams treeParams;
-		resources.treeTrunkGeom	= new TrunkGeometry(200.0f, 64, treeParams);
-		resources.treeCrownGeom = new LeavesGeometry(10000, 200.0f, 42u, treeParams);
+		for (int i = 0; i < 10; i++) {
+			TreeParams treeParams(i);
+			resources.treeTrunkGeoms.push_back(new TrunkGeometry(128.0f, 32, treeParams));
+			resources.treeCrownGeoms.push_back(new LeavesGeometry(200.0f, 64, 3600, treeParams));
+		}
 
 		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(&cfg, &resources);

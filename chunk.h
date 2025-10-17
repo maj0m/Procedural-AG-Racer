@@ -14,7 +14,6 @@
 #include "InstanceField.h"
 #include "SharedResources.h"
 #include "WorldConfig.h"
-#include "trunkshader.h"
 
 class Chunk {
 protected:
@@ -72,8 +71,8 @@ public:
         // Retrieve actual vertex count
         glGetNamedBufferSubData(vbo, 0, sizeof(GLuint), &actualVertexCount);
 
-        treeTrunkField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeTrunkGeom, new TrunkShader(), resources->terrainHeightCS, segIndexSSBO, segIndexCount);
-        treeCrownField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeCrownGeom, resources->instanceShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
+        treeTrunkField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeTrunkGeoms, resources->treeTrunkShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
+        treeCrownField = std::make_unique<InstanceField>(id, cfg->chunkSize, resources->treeCrownGeoms, resources->treeLeafShader, resources->terrainHeightCS, segIndexSSBO, segIndexCount);
     }
 
     ~Chunk() {

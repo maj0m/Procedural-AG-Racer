@@ -34,6 +34,7 @@ public:
 
     float displace(vec3 p) {
         float baseFreq = 0.16f;
+        float baseAmpl = 1.0f;
         float warpFreq = 0.15f;
         float warpAmp = 6.0f;
 
@@ -46,6 +47,6 @@ public:
 
         // Main displacement
         float n = sin(q.x * baseFreq) * sin(q.y * baseFreq) * sin(q.z * baseFreq);
-        return n * 3.0f;
+        return n * baseAmpl;
     }
 };

@@ -1,34 +1,56 @@
 #pragma once
 #include "framework.h"
 
-// Deterministic per-chunk RNG
-uint32_t seed = hash3(33823);
-std::mt19937 rng(seed);
-
-auto randf = [&](float a, float b) {
-    std::uniform_real_distribution<float> d(a, b);
-    return d(rng);
-    };
-
 struct TreeParams {
-    const float trunkRadius = 8.0f;
-    const float branchRadius = 6.0f;
-    const vec3 trunkStartPos = vec3(0.0f, 0.0f, 0.0f);
-    const vec3 trunkEndPos = vec3(randf(0.0f, 15.0f), randf(40.0f, 75.0f), randf(0.0f, 15.0f));
-    const float branch1OffsetX = randf(20.0f, 50.0f);
-    const float branch1OffsetY = randf(20.0f, 70.0f);
-    const float branch2OffsetX = randf(-50.0f, -20.0f);
-    const float branch2OffsetY = randf(20.0f, 70.0f);
+private:
+    std::mt19937 rng;
 
-    const vec3 branch1StartPos = trunkEndPos;
-    const vec3 branch2StartPos = trunkEndPos;
-    vec3 branch1EndPos = vec3(branch1OffsetX, trunkEndPos.y + branch1OffsetY, 0.0f);
-    vec3 branch2EndPos = vec3(branch2OffsetX, trunkEndPos.y + branch2OffsetY, 0.0f);
+    auto randf() {
+        return [&](float a, float b) {
+            std::uniform_real_distribution<float> d(a, b);
+            return d(this->rng);
+        };
+    }
 
-    float leaves1Radius = 50.0f;
-    float leaves2Radius = 50.0f;
-    vec3 leaves1Scale = vec3(randf(0.9f, 1.1f), randf(0.7f, 0.9f), randf(0.9f, 1.1f));
-    vec3 leaves2Scale = vec3(randf(0.9f, 1.1f), randf(0.7f, 0.9f), randf(0.9f, 1.1f));
-    float minLeafSize = 4.0f;
-    float maxLeafSize = 8.0f;
+public:
+    float trunkRadius;
+    float branchRadius;
+    vec3 trunkStartPos;
+    vec3 trunkEndPos;
+    vec3 branch1Offset;
+    vec3 branch2Offset;
+    vec3 branch1StartPos;
+    vec3 branch2StartPos;
+    vec3 branch1EndPos;
+    vec3 branch2EndPos;
+    float leaves1Radius;
+    float leaves2Radius;
+    vec3 leaves1Scale;
+    vec3 leaves2Scale;
+    float minLeafSize;
+    float maxLeafSize;
+
+    TreeParams(uint32_t seed) : rng(seed) {
+        auto r = randf();
+
+        trunkRadius = 8.0f;
+        branchRadius = 7.0f;
+        trunkStartPos = vec3(0.0f, 0.0f, 0.0f);
+
+        trunkEndPos = vec3(r(0.0f, 15.0f), r(15.0f, 60.0f), r(0.0f, 15.0f));
+        branch1Offset = vec3(r(10.0f, 60.0f), r(60.0f, 90.0f), r(-10.0f, 10.0f));
+        branch2Offset = vec3(r(-60.0f, -10.0f), r(60.0f, 90.0f), r(-10.0f, 10.0f));
+
+        branch1StartPos = trunkEndPos;
+        branch2StartPos = trunkEndPos;
+        branch1EndPos = trunkEndPos + branch1Offset;
+        branch2EndPos = trunkEndPos + branch2Offset;
+
+        leaves1Radius = 50.0f;
+        leaves2Radius = 50.0f;
+        leaves1Scale = vec3(r(0.9f, 1.1f), r(0.7f, 0.9f), r(0.9f, 1.1f));
+        leaves2Scale = vec3(r(0.9f, 1.1f), r(0.7f, 0.9f), r(0.9f, 1.1f));
+        minLeafSize = 16.0f;
+        maxLeafSize = 20.0f;
+    }
 };

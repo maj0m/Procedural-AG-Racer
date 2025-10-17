@@ -10,6 +10,8 @@ struct SharedResources {
     Shader*             terrainShader       = nullptr;
     Shader*             waterShader         = nullptr;
     Shader*             instanceShader      = nullptr;
+    Shader*             treeTrunkShader     = nullptr;
+    Shader*             treeLeafShader      = nullptr;
     MarchingCubesCS*    marchingCubesCS     = nullptr;
     GroundDistanceCS*   groundDistanceCS    = nullptr;
     TerrainHeightCS*    terrainHeightCS     = nullptr;
@@ -17,6 +19,6 @@ struct SharedResources {
     // common geometries
     Geometry* waterGeom     = nullptr;
     Geometry* cactusGeom    = nullptr;
-    Geometry* treeTrunkGeom = nullptr;
-    Geometry* treeCrownGeom = nullptr;
+    std::vector<Geometry*> treeTrunkGeoms;
+    std::vector<Geometry*> treeCrownGeoms;
 };

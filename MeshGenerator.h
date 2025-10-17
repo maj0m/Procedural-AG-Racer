@@ -138,13 +138,12 @@ struct LeafCloudGenerator : MeshGenerator {
     float radius;             // Half-size of the grid box
     float sizeMin;
     float sizeMax;
-    uint32_t seed;
 
     std::function<float(vec3)> sdf;
     int   gridRes;
 
-    LeafCloudGenerator(int leafCount, float radius, std::function<float(vec3)> sdf, int gridRes = 32, float sizeMin = 0.3f, float sizeMax = 0.8f, uint32_t seed = 1337u)
-        : leafCount(leafCount), radius(radius), sizeMin(sizeMin), sizeMax(sizeMax), seed(seed), sdf(std::move(sdf)), gridRes(gridRes) {}
+    LeafCloudGenerator(int leafCount, float radius, std::function<float(vec3)> sdf, int gridRes = 32, float sizeMin = 0.3f, float sizeMax = 0.8f)
+        : leafCount(leafCount), radius(radius), sizeMin(sizeMin), sizeMax(sizeMax), sdf(std::move(sdf)), gridRes(gridRes) {}
 
     static inline vec3 anyPerp(const vec3& n) {
         vec3 t = (fabs(n.z) < 0.99f) ? vec3(0, 0, 1) : vec3(0, 1, 0);
@@ -164,7 +163,7 @@ struct LeafCloudGenerator : MeshGenerator {
         outVerts.clear();
         outVerts.reserve(leafCount * 3);
 
-        std::mt19937 rng(seed);
+        std::mt19937 rng(1337);
         std::uniform_real_distribution<float> U(0.0f, 1.0f);
         std::uniform_real_distribution<float> Size(sizeMin, sizeMax);
 
@@ -183,7 +182,7 @@ struct LeafCloudGenerator : MeshGenerator {
                 for (int iz = 0; iz < gridRes; ++iz) {
                     vec3 pWorld = bmin + vec3(ix, iy, iz) * step + half;
 
-                    if (sdf(pWorld) < 0.0f) {
+                    if (fabsf(sdf(pWorld)) < 5.0f) {
                         vec3 jitter = vec3(U(rng) - 0.5f, U(rng) - 0.5f, U(rng) - 0.5f) * step * 0.8f;
                         centers.push_back(pWorld + jitter);
                     }

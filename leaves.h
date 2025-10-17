@@ -7,9 +7,9 @@ class LeavesGeometry : public Geometry {
     TreeParams params;
 
 public:
-    LeavesGeometry(int leafCount, float radius, uint32_t seed, const TreeParams& params) : params(params) {
+    LeavesGeometry(float radius, int tesselation, int leafCount, const TreeParams& params) : params(params) {
 
-        LeafCloudGenerator gen(leafCount, radius, [this](vec3 p) { return this->sdf(p); }, 128, params.minLeafSize, params.maxLeafSize, seed);
+        LeafCloudGenerator gen(leafCount, radius, [this](vec3 p) { return this->sdf(p); }, tesselation, params.minLeafSize, params.maxLeafSize);
 
         std::vector<vec3> vtx;
         gen.generate(vtx);
@@ -32,6 +32,7 @@ public:
 
     float displace(vec3 p) {
         float baseFreq = 0.05f;
+        float baseAmpl = 10.0f;
         float warpFreq = 0.15f;
         float warpAmp = 6.0f;
 
@@ -44,7 +45,7 @@ public:
 
         // Main displacement
         float n = sin(q.x * baseFreq) * sin(q.y * baseFreq) * sin(q.z * baseFreq);
-        return n * 10.0f;
+        return n * baseAmpl;
     }
 
     float opSmoothUnion(float d1, float d2, float k) {
