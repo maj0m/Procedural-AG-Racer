@@ -39,7 +39,7 @@ out vec4 fragmentColor;
 // ---------- Color helper ---------- 
 vec3 normalToColor(vec3 N) {
 	// Calculate the angle between the normal and the Y-axis
-	float angle = degrees(acos(dot(N, vec3(0.0, 1.0, 0.0))));
+	float angle =  N.y < 0.9999 ? degrees(acos(dot(N, vec3(0.0, 1.0, 0.0)))) : 0.0;
 
 	// Color based on tri angle
 	vec3 col = vec3(0.0);
