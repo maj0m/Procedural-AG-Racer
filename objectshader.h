@@ -16,5 +16,11 @@ public:
 		setUniform(state.MVP, "MVP");
 		setUniform(state.M, "M");
 		setUniform(state.wEye, "wEye");
+
+		// Shadow
+		setUniform(state.lightVP, "lightVP");
+		setUniform(state.shadowTexel, "u_shadowTexel");
+		setUniform(state.shadowBias, "u_shadowBias");
+		setUniform(2, "u_shadowMap");
 	}
 };

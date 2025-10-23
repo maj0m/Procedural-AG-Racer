@@ -14,7 +14,7 @@ struct GrassInstance {
     float height; // blade height
     float width;  // blade width
     float phase;  // wind sway
-    float inShadow;
+    float _pad;
 };
 
 class GrassField {
@@ -103,7 +103,7 @@ public:
 
         // layout(location=6) = float inShadow
         glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, inShadow)));
+        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, _pad)));
         glVertexAttribDivisor(6, 1);
 
         glBindVertexArray(0);

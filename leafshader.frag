@@ -31,10 +31,40 @@ layout(std140, binding = 7) uniform ColorPalette {
     float fogDensity;
 };
 
+uniform sampler2D u_shadowMap;
+uniform vec2      u_shadowTexel;  // (1/width, 1/height)
+uniform float     u_shadowBias;
+
 in vec3 wView;		
 in float wDist;
+in vec4 lightClip;
 
 out vec4 fragmentColor;
+
+// ---------- Shadow ----------
+float shadowMask(vec4 lightClip) {
+    // Clip to NDC
+    vec3 proj = lightClip.xyz / lightClip.w;
+    vec2 uv = proj.xy * 0.5 + 0.5;
+    float depth = proj.z * 0.5 + 0.5;
+
+    // Outside map
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+
+    // 3x3 PCF
+    float vis = 0.0;
+    int kernel = 1;
+    for (int dx = -kernel; dx <= kernel; ++dx) {
+        for (int dy = -kernel; dy <= kernel; ++dy) {
+            vec2 offset = vec2(dx, dy) * u_shadowTexel;
+            float closest = texture(u_shadowMap, uv + offset).r;
+            float current = depth - u_shadowBias;
+            vis += (current <= closest) ? 1.0 : 0.0;
+        }
+    }
+
+    return vis / pow(kernel * 2 + 1, 2);
+}
 
 // ---------- Main ----------
 void main() {
@@ -55,7 +85,8 @@ void main() {
 	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
 	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
-    vec3 radiance = ambient + diffuse + specular;
+    float shadow = shadowMask(lightClip);
+    vec3 radiance = ambient + (diffuse + specular) * shadow;
 
 	// Base sky gradient
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);

@@ -4,7 +4,7 @@
 class FPSCounter {
 private:
     // FPS
-    int frameCount = 0;
+    unsigned int frameCount = 0;
     double previousFrameTime;
     int currentFPS = 0;
 
@@ -46,4 +46,5 @@ public:
     float getDeltaTime() const { return deltaTime; }
     int getFPS() const { return currentFPS; }
     float getAverageFPS() const { return currentAvgFPS; }
+    unsigned int getFrameCount() const { return frameCount; }
 };

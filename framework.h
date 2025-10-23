@@ -75,6 +75,7 @@ struct vec3 {
 	vec3 operator+(const vec3& v) const { return vec3(x + v.x, y + v.y, z + v.z); }
 	vec3 operator-(const vec3& v) const { return vec3(x - v.x, y - v.y, z - v.z); }
 	vec3 operator*(const vec3& v) const { return vec3(x * v.x, y * v.y, z * v.z); }
+	vec3 operator/(const vec3& v) const { return vec3(x / v.x, y / v.y, z / v.z); }
 	vec3 operator-()  const { return vec3(-x, -y, -z); }
 	void operator+=(const vec3 right) { x += right.x; y += right.y; z += right.z; }
 	void operator-=(const vec3 right) { x -= right.x; y -= right.y; z -= right.z; }
@@ -210,6 +211,38 @@ inline mat4 TransposeMatrix(const mat4& m) {
 		vec4(m[0].w, m[1].w, m[2].w, m[3].w)
 	);
 }
+
+inline mat4 LookAt(const vec3& eye, const vec3& target, const vec3& up) {
+	vec3 w = normalize(eye - target);          // backward
+	vec3 u = normalize(cross(up, w));          // right
+	vec3 v = cross(w, u);                      // up
+
+	// u, v, w, translation
+	return mat4(
+		vec4(u.x, v.x, w.x, 0.0f),
+		vec4(u.y, v.y, w.y, 0.0f),
+		vec4(u.z, v.z, w.z, 0.0f),
+		vec4(-dot(u, eye), -dot(v, eye), -dot(w, eye), 1.0f)
+	);
+}
+
+// Orthographic projection
+inline mat4 Ortho(float l, float r, float b, float t, float n, float f) {
+	float sx = 2.0f / (r - l);
+	float sy = 2.0f / (t - b);
+	float sz = -2.0f / (f - n);
+	float tx = -(r + l) / (r - l);
+	float ty = -(t + b) / (t - b);
+	float tz = -(f + n) / (f - n);
+
+	return mat4(
+		vec4(sx, 0.0f, 0.0f, 0.0f),
+		vec4(0.0f, sy, 0.0f, 0.0f),
+		vec4(0.0f, 0.0f, sz, 0.0f),
+		vec4(tx, ty, tz, 1.0f)
+	);
+}
+
 
 struct Quaternion {
 	float w, x, y, z;

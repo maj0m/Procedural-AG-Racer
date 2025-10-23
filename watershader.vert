@@ -28,11 +28,13 @@ uniform float u_time;
 uniform vec2 u_planeOriginXZ;
 uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
+uniform mat4 lightVP;
 
 out float waterDepth;
 out float wDist;
 out vec3 wView;
 out vec3 vtxPos;
+out vec4 lightClip;
 
 // ---------- Seed ----------
 vec3 seedOffset(int s) {
@@ -117,4 +119,5 @@ void main() {
 	vec4 wPos = M * vec4(vtxPos, 1);
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
+	lightClip = lightVP * wPos;
 }

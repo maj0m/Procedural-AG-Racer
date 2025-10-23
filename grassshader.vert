@@ -13,12 +13,13 @@ layout (location=6) in float inShadow;
 uniform float u_time;
 uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
+uniform mat4 lightVP;
 
 out float vShade;                       // tiny variation for fragment	
 out vec3 wView;							// view in world space
 out float wDist;						// distance from camera
 out vec3 vtxPos;
-out float vShadow;
+out vec4 lightClip;
 
 float u_windStrength = 1.0;  // meters of lateral tip deflection
 vec2  u_windDir = vec2(1.0, 0.3); // XZ direction (will be normalized)
@@ -50,15 +51,15 @@ void main() {
     p.xz = rot(iYaw) * p.xz;
 
     // Translate to world position
-    vec3 worldPos = iPos + p;
-    wView  = wEye - worldPos;
+    vec3 wPos = iPos + p;
+    wView  = wEye - wPos;
 	wDist = length(wView);
-    vtxPos = worldPos;
+    vtxPos = wPos;
 
     // Small per-blade color variation
     vShade = fract(sin(dot(iPos.xz, vec2(12.9898,78.233))) * 43758.5453);
 
-    gl_Position = MVP * vec4(worldPos, 1.0);
+    gl_Position = MVP * vec4(wPos, 1.0);
 
-    vShadow = inShadow;
+    lightClip = lightVP * vec4(wPos, 1.0);
 }

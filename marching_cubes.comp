@@ -193,27 +193,6 @@ float densityAt(vec3 pos) {
 }
 
 
-// ---------- Shadow Ray-Marcher ----------
-bool isInShadow(vec3 wPos) {
-    vec3 rayDir = normalize(u_lightDir.xyz);
-
-    // Small bias to avoid self-hits
-    const float eps = 10.0;
-    vec3 p = wPos + rayDir * eps;
-
-    // Fixed-step march
-    const float stepLen  = 10.0;
-    const int   maxSteps = 100;
-
-    for (int i = 0; i < maxSteps; ++i) {
-        if (p.y > 200.0) return false;          // escaped above terrain
-        if (densityAt(p) > 0.0) return true;    // hit
-        p += rayDir * stepLen;
-    }
-    return false; // no hit
-}
-
-
 // ---------- Marching cubes helpers ----------
 vec3 worldCornerPos(int cornerIdx, vec3 baseWorld, float scale) {
     return baseWorld + CORNERS[cornerIdx] * scale;
@@ -283,13 +262,10 @@ void main() {
         // Triangle center
         vec3 triCenter = (p0 + p1 + p2) * (1.0 / 3.0);
 
-        // Baked shadow
-        float shadowFlag = isInShadow(triCenter) ? 1.0 : 0.0;
-
         // Write vertices; store shadow in .w
-        vertices[base + 0u] = vec4(p0, shadowFlag);
-        vertices[base + 1u] = vec4(p1, shadowFlag);
-        vertices[base + 2u] = vec4(p2, shadowFlag);
+        vertices[base + 0u] = vec4(p0, 1.0);
+        vertices[base + 1u] = vec4(p1, 1.0);
+        vertices[base + 2u] = vec4(p2, 1.0);
 
         i += 3;
     }

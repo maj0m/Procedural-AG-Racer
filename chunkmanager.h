@@ -10,7 +10,6 @@
 #include "terrainshader.h"
 #include "TrackManager.h"
 #include "watershader.h"
-#include "cactus.h"
 #include "TerrainHeightCS.h"
 #include "SharedResources.h"
 #include "WorldConfig.h"
@@ -138,6 +137,10 @@ public:
         return true; // intersects or fully inside
     }
 
+    bool isChunkNeighbor(const vec3& currentChunkId, const vec3& chunkId) {
+        return abs(currentChunkId.x - chunkId.x) <= 2.0f && abs(currentChunkId.z - chunkId.z) <= 2.0f;
+    }
+
 
     void ReloadChunks() {
         // Create a vector to store chunk IDs before reloading them
@@ -163,10 +166,12 @@ public:
     void DrawChunks(RenderState& state, Camera& camera) {
         glBindVertexArray(vao);
         
+        vec3 cameraPos = camera.getEyePos();
+        vec3 currentChunk = vec3(floor(cameraPos.x / cfg->chunkSize), 0.0f, floor(cameraPos.z / cfg->chunkSize));
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {
             vec3 chunkPos = pair.first * cfg->chunkSize;
-            if (isChunkVisible(chunkPos, cfg->chunkSize, frustumPlanes, camera.getEyePos())) {
+            if (isChunkVisible(chunkPos, cfg->chunkSize, frustumPlanes, cameraPos) || isChunkNeighbor(currentChunk, pair.first)) {
                 pair.second->Draw(state);
             }
         }

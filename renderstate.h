@@ -10,4 +10,10 @@ struct RenderState {
 	mat4 MVP, M, V, P;
 	vec3 chunkId;
 	float chunkSize;
+
+	// Shadow params
+	mat4  lightVP;
+	vec2  shadowTexel;  // (1/width, 1/height)
+	float shadowBias;
+	GLuint shadowTex;
 };

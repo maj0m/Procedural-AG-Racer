@@ -11,11 +11,12 @@ layout(std430, binding = 0) buffer VertexBuffer {
 		
 uniform mat4 MVP, M;					// MVP, Model
 uniform vec3 wEye;						// Eye position
+uniform mat4 lightVP;
 
 out vec3 wView;							// view in world space
 out float wDist;						// distance from camera
 out vec3 vtxPos;
-flat out float vShadow;  // 0 = lit, 1 = shadowed
+out vec4 lightClip;
 
 // ---------- Main ----------
 void main() {
@@ -26,5 +27,5 @@ void main() {
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);				// Distance from eye to vertex
 	vtxPos = vertexPos;
-    vShadow = vertices[gl_VertexID].w; 	// baked in mc.comp
+    lightClip = lightVP * wPos;
 }
