@@ -47,10 +47,14 @@ class Scene {
 	ShadowMap shadow;
 	mat4 lightV, lightP, lightVP;
 
+	GLuint prevSceneColor = 0;   // reflection source
+	GLuint sceneDepthCopy = 0;   // depth readback for SSR
+
 	void updateState(RenderState& state) {
 		state.M = mat4();
 		state.V = camera->V();
 		state.P = camera->P();
+		state.invP = Inverse(state.P);
 
 		state.wEye = camera->getEyePos();
 		state.wFront = camera->getEyeDir();
@@ -81,6 +85,8 @@ class Scene {
 	void destroyRenderTarget() {
 		if (sceneDepth) { glDeleteTextures(1, &sceneDepth); sceneDepth = 0; }
 		if (sceneColor) { glDeleteTextures(1, &sceneColor); sceneColor = 0; }
+		if (prevSceneColor) { glDeleteTextures(1, &prevSceneColor); prevSceneColor = 0; }
+		if (sceneDepthCopy) { glDeleteTextures(1, &sceneDepthCopy); sceneDepthCopy = 0; }
 		if (sceneFBO) { glDeleteFramebuffers(1, &sceneFBO); sceneFBO = 0; }
 	}
 
@@ -107,6 +113,20 @@ class Scene {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, sceneDepth, 0);
 
+		// Previous frame for water reflection
+		glGenTextures(1, &prevSceneColor);
+		glBindTexture(GL_TEXTURE_2D, prevSceneColor);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		// Depth copy for water reflection
+		glGenTextures(1, &sceneDepthCopy);
+		glBindTexture(GL_TEXTURE_2D, sceneDepthCopy);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 		GLenum drawBuffer = GL_COLOR_ATTACHMENT0;
 		glDrawBuffers(1, &drawBuffer);
 
@@ -116,16 +136,16 @@ class Scene {
 	void updateLightMatrices() {
 		// Focus the shadow box around the camera
 		vec3 camPos = camera->getEyePos();
-		vec3 center = vec3(floor(camPos.x / cfg.chunkSize), 0.0f, floor(camPos.z / cfg.chunkSize)) * cfg.chunkSize; // center box on current chunk
+		vec3 center = vec3(floor(camPos.x / cfg.chunkSize), 0.0f, floor(camPos.z / cfg.chunkSize)) * cfg.chunkSize;
 		vec3 lightDir = -vec3(sun.data.dir.x, sun.data.dir.y, sun.data.dir.z);
 		vec3 lightPos = center - lightDir * 1200.0f;     // pull back enough to see the box
 		float halfSize = 2000.0f;     // covers this much around camera
-		float halfHeight = 2000.0f;   // Y coverage
+		float halfHeight = 2000.0f;
 		float nearPlane = 0.1f;
 		float farPlane = 2000.0f;
 
 		// Build matrices
-		lightV = LookAt(lightPos, center, vec3(0, 1, 0));
+		lightV = LookAt(lightPos, center, vec3(0.0f, 1.0f, 0.0f));
 		lightP = Ortho(-halfSize, halfSize, -halfHeight, halfHeight, nearPlane, farPlane);
 		lightVP = lightP * lightV;
 	}
@@ -177,7 +197,7 @@ public:
 			state.P = prevP;
 		}
 
-		// Pass 1: render scene to off-screen FBO
+		// Render scene to off-screen FBO
 		glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
 		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -187,7 +207,19 @@ public:
 		chunkManager->DrawChunks(state, *camera);
 		if (controlMode == ControlMode::Player) player->Draw(state);
 
-		// Pass 2: post-process
+		// Copy depth for SSR so water can safely sample it
+		glCopyImageSubData(
+			sceneDepth, GL_TEXTURE_2D, 0, 0, 0, 0,
+			sceneDepthCopy, GL_TEXTURE_2D, 0, 0, 0, 0,
+			WINDOW_WIDTH, WINDOW_HEIGHT, 1
+		);
+
+		// Draw water and set SSR textures
+		state.sceneDepthCopy = sceneDepthCopy;
+		state.sceneColorPrev = prevSceneColor;
+		chunkManager->DrawWater(state);
+
+		// Post-process
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		postShader->Bind(state);
 		glActiveTexture(GL_TEXTURE0);
@@ -199,10 +231,16 @@ public:
 		glBindVertexArray(fsVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		// GUI
+		// Update prevSceneColor for next frame
+		glCopyImageSubData(
+			sceneColor, GL_TEXTURE_2D, 0, 0, 0, 0,
+			prevSceneColor, GL_TEXTURE_2D, 0, 0, 0, 0,
+			WINDOW_WIDTH, WINDOW_HEIGHT, 1
+		);
+
+		// Draw GUI
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 	}
-
 
 	void Build() {
 		postShader = new PostProcessShader();

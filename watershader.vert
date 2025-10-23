@@ -26,15 +26,16 @@ layout(std140, binding = 3) uniform TerrainParams {
 
 uniform float u_time;
 uniform vec2 u_planeOriginXZ;
-uniform mat4 MVP, M;					// MVP, Model
+uniform mat4 MVP, M, V, P;					// MVP, Model
 uniform vec3 wEye;						// Eye position
 uniform mat4 lightVP;
 
-out float waterDepth;
 out float wDist;
 out vec3 wView;
 out vec3 vtxPos;
 out vec4 lightClip;
+out vec3 vtxPosView;
+out vec4 vtxPosProj;
 
 // ---------- Seed ----------
 vec3 seedOffset(int s) {
@@ -98,26 +99,18 @@ float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int oc
     return acc;
 }
 
-// ---------- Terrain density ----------
-float bedrockDensityAt(vec3 pos) {
-    // Bedrock
-    float bedrockNoise = fbmSimplex3D(vec3(pos.x, 0.0, pos.z), u_bedrockFrequency, u_bedrockAmplitude, u_frequencyMultiplier, u_amplitudeMultiplier, u_warpOctaves);
-    float bedrockDensity = -pos.y + bedrockNoise + u_floorLevel;
-
-    return bedrockDensity;
-}
-
 // ---------- Main ----------
 void main() {
-	
 	vtxPos = vertexPos + vec3(u_planeOriginXZ.x, u_waterLevel, u_planeOriginXZ.y);
-	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 10.0, vtxPos.z), 0.02, 2.0, 2.0, 0.5, 2);
-	waterDepth = bedrockDensityAt(vtxPos);
+	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 10.0, vtxPos.z), 0.02, 1.0, 2.0, 0.5, 2);
 
-	gl_Position = MVP * vec4(vtxPos, 1.0);
+	vec4 clipPos = MVP * vec4(vtxPos, 1.0);
+	gl_Position = clipPos;
 
 	vec4 wPos = M * vec4(vtxPos, 1);
 	wView  = wEye - wPos.xyz;
 	wDist = length(wView);         // Distance from eye to vertex
 	lightClip = lightVP * wPos;
+	vtxPosView = (V * vec4(vtxPos, 1.0)).xyz;
+	vtxPosProj = clipPos;
 }

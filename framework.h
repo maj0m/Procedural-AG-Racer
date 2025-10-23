@@ -243,6 +243,61 @@ inline mat4 Ortho(float l, float r, float b, float t, float n, float f) {
 	);
 }
 
+inline mat4 Inverse(const mat4& m) {
+	float A2323 = m[2].z * m[3].w - m[2].w * m[3].z;
+	float A1323 = m[2].y * m[3].w - m[2].w * m[3].y;
+	float A1223 = m[2].y * m[3].z - m[2].z * m[3].y;
+	float A0323 = m[2].x * m[3].w - m[2].w * m[3].x;
+	float A0223 = m[2].x * m[3].z - m[2].z * m[3].x;
+	float A0123 = m[2].x * m[3].y - m[2].y * m[3].x;
+	float A2313 = m[1].z * m[3].w - m[1].w * m[3].z;
+	float A1313 = m[1].y * m[3].w - m[1].w * m[3].y;
+	float A1213 = m[1].y * m[3].z - m[1].z * m[3].y;
+	float A2312 = m[1].z * m[2].w - m[1].w * m[2].z;
+	float A1312 = m[1].y * m[2].w - m[1].w * m[2].y;
+	float A1212 = m[1].y * m[2].z - m[1].z * m[2].y;
+	float A0313 = m[1].x * m[3].w - m[1].w * m[3].x;
+	float A0213 = m[1].x * m[3].z - m[1].z * m[3].x;
+	float A0113 = m[1].x * m[3].y - m[1].y * m[3].x;
+	float A0312 = m[1].x * m[2].w - m[1].w * m[2].x;
+	float A0212 = m[1].x * m[2].z - m[1].z * m[2].x;
+	float A0112 = m[1].x * m[2].y - m[1].y * m[2].x;
+
+	float det =	
+		m[0].x * (m[1].y * A2323 - m[1].z * A1323 + m[1].w * A1223) -
+		m[0].y * (m[1].x * A2323 - m[1].z * A0323 + m[1].w * A0223) +
+		m[0].z * (m[1].x * A1323 - m[1].y * A0323 + m[1].w * A0123) -
+		m[0].w * (m[1].x * A1223 - m[1].y * A0223 + m[1].z * A0123);
+
+	if (fabsf(det) < 1e-6) {
+		return mat4(); // Matrix is singular, cannot be inverted
+	}
+
+	float invDet = 1.0f / det;
+
+	mat4 inverse;
+	inverse[0].x = invDet * (m[1].y * A2323 - m[1].z * A1323 + m[1].w * A1223);
+	inverse[0].y = invDet * -(m[0].y * A2323 - m[0].z * A1323 + m[0].w * A1223);
+	inverse[0].z = invDet * (m[0].y * A2313 - m[0].z * A1313 + m[0].w * A1213);
+	inverse[0].w = invDet * -(m[0].y * A2312 - m[0].z * A1312 + m[0].w * A1212);
+
+	inverse[1].x = invDet * -(m[1].x * A2323 - m[1].z * A0323 + m[1].w * A0223);
+	inverse[1].y = invDet * (m[0].x * A2323 - m[0].z * A0323 + m[0].w * A0223);
+	inverse[1].z = invDet * -(m[0].x * A2313 - m[0].z * A0313 + m[0].w * A0213);
+	inverse[1].w = invDet * (m[0].x * A2312 - m[0].z * A0312 + m[0].w * A0212);
+
+	inverse[2].x = invDet * (m[1].x * A1323 - m[1].y * A0323 + m[1].w * A0123);
+	inverse[2].y = invDet * -(m[0].x * A1323 - m[0].y * A0323 + m[0].w * A0123);
+	inverse[2].z = invDet * (m[0].x * A1313 - m[0].y * A0313 + m[0].w * A0113);
+	inverse[2].w = invDet * -(m[0].x * A1312 - m[0].y * A0312 + m[0].w * A0112);
+
+	inverse[3].x = invDet * -(m[1].x * A1223 - m[1].y * A0223 + m[1].z * A0123);
+	inverse[3].y = invDet * (m[0].x * A1223 - m[0].y * A0223 + m[0].z * A0123);
+	inverse[3].z = invDet * -(m[0].x * A1213 - m[0].y * A0213 + m[0].z * A0113);
+	inverse[3].w = invDet * (m[0].x * A1212 - m[0].y * A0212 + m[0].z * A0112);
+
+	return inverse;
+}
 
 struct Quaternion {
 	float w, x, y, z;
