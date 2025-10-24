@@ -9,8 +9,8 @@
 
 class Player {
     Camera* camera;
-    ChunkManager* chunkManager;
     Object* playerObject;
+    ChunkManager* chunkManager;
     GroundDistanceCS* groundDistanceCS;
 
     vec3 pos;

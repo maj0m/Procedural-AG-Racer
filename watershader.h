@@ -13,12 +13,12 @@ public:
 		Use();
 
 		setUniform(state.time, "u_time");
-		vec2 originXZ = vec2(floor(state.wEye.x / state.chunkSize), floor(state.wEye.z / state.chunkSize)) * state.chunkSize + vec2(state.chunkSize / 2.0f, state.chunkSize / 2.0f);
+		vec2 originXZ = vec2(floor(state.cameraPos.x / state.chunkSize), floor(state.cameraPos.z / state.chunkSize)) * state.chunkSize + vec2(state.chunkSize / 2.0f, state.chunkSize / 2.0f);
 		setUniform(originXZ, "u_planeOriginXZ");
 		setUniform(state.V, "u_V");
 		setUniform(state.P, "u_P");
 		setUniform(state.invP, "u_invP");
-		setUniform(state.wEye, "u_camPos_WS");
+		setUniform(state.cameraPos, "u_camPos_WS");
 
 		// Shadow
 		setUniform(state.lightVP, "u_lightVP");

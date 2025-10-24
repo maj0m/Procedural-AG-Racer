@@ -15,7 +15,7 @@ public:
 
 		setUniform(state.V, "u_V");
 		setUniform(state.P, "u_P");
-		setUniform(state.wEye, "u_camPos_WS");
+		setUniform(state.cameraPos, "u_camPos_WS");
 
 		// Shadow
 		setUniform(state.lightVP, "u_lightVP");

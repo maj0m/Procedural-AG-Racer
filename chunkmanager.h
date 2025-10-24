@@ -2,15 +2,9 @@
 #include "framework.h"
 #include "chunk.h"
 #include <unordered_map>
-#include <string>
 #include "camera.h"
-#include <memory>
 #include "object.h"
-#include "plane.h"
-#include "terrainshader.h"
 #include "TrackManager.h"
-#include "watershader.h"
-#include "TerrainHeightCS.h"
 #include "SharedResources.h"
 #include "WorldConfig.h"
 
@@ -166,7 +160,7 @@ public:
     void DrawChunks(RenderState& state, Camera& camera) {
         glBindVertexArray(vao);
         
-        vec3 cameraPos = camera.getEyePos();
+        vec3 cameraPos = camera.getPos();
         vec3 currentChunk = vec3(floor(cameraPos.x / cfg->chunkSize), 0.0f, floor(cameraPos.z / cfg->chunkSize));
         std::vector<vec4> frustumPlanes = camera.getFrustumPlanes();
         for (auto& pair : chunkMap) {

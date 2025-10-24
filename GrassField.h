@@ -7,12 +7,11 @@
 #include "TrackManager.h"
 
 struct GrassInstance {
-    // 32 bytes
-    vec3 pos;     // world pos
-    float yaw;    // rotation around Y
-    float height; // blade height
-    float width;  // blade width
-    float phase;  // wind sway
+    vec3 pos;
+    float yaw;
+    float height;
+    float width;
+    float phase;
     float _pad;
 };
 
@@ -64,8 +63,6 @@ public:
         
         // Dispatch
         scatterCS.Dispatch((GLuint)capacity, chunkId, chunkSize, segIndexCount);
-
-        // Ensure writes are visible before reading count / using as vertex source
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
         // Read back instanceCount
@@ -75,32 +72,25 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
         const GLsizei stride = sizeof(GrassInstance);
 
-        // layout(location=1) = vec3 iPos
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, pos)));
         glVertexAttribDivisor(1, 1);
 
-        // layout(location=2) = float iYaw
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, yaw)));
         glVertexAttribDivisor(2, 1);
 
-        // layout(location=3) = float iHeight
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, height)));
         glVertexAttribDivisor(3, 1);
 
-        // layout(location=4) = float iWidth
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, width)));
         glVertexAttribDivisor(4, 1);
 
-        // layout(location=5) = float iPhase
         glEnableVertexAttribArray(5);
         glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, phase)));
         glVertexAttribDivisor(5, 1);
-
-        glBindVertexArray(0);
     }
 
     void Draw(RenderState& state) {

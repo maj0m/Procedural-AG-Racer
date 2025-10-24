@@ -1,16 +1,18 @@
 #pragma once
 #include "framework.h"
-#include <iostream>
 #include "globals.h"
 
 class Camera {
 private:
 
-    vec3 wEye, wFront, wUp;
-    float fov, asp, fp, bp;
-    float walkSpeed = 200.0f;
-    float fastSpeed = 400.0f;
+    vec3 pos;
+    vec3 forward, right, up;
+    float fov, aspectRatio;
+    float nearPlane, farPlane;
+    float focalLength;
     float sensitivity = 0.25f;
+    float speedNormal = 200.0f;
+    float speedSprint = 400.0f;
     float lastX = WINDOW_WIDTH / 2.0f;
     float lastY = WINDOW_HEIGHT / 2.0f;
     float yaw = 0.0f;
@@ -19,13 +21,14 @@ private:
 
 public:
     Camera() {
-        wEye = vec3(0.0f, 0.0f, 0.0f);
-        wFront = vec3(0.0f, 0.0f, -1.0f);
-        wUp = vec3(0.0f, 1.0f, 0.0f);
-        asp = (float)WINDOW_WIDTH / WINDOW_HEIGHT;
+        pos = vec3(0.0f, 0.0f, 0.0f);
+        forward = vec3(0.0f, 0.0f, -1.0f);
+        up = vec3(0.0f, 1.0f, 0.0f);
         fov = 75.0f;
-        fp = 0.1f;
-        bp = 2000.0f;
+        aspectRatio = (float)WINDOW_WIDTH / WINDOW_HEIGHT;
+        focalLength = 1.0f / tanf(radians(fov) * 0.5f);
+        farPlane = 0.1f;
+        nearPlane = 2000.0f;
     }
 
     std::vector<vec4> getFrustumPlanes() {
@@ -53,10 +56,9 @@ public:
     void followPlayer(const vec3& playerPos, const vec3& playerDirection, float distanceBehind, float heightAbove, float followSpeed, float dt) {
         vec3 targetPosition = playerPos + vec3(-playerDirection.x * distanceBehind, heightAbove, -playerDirection.z * distanceBehind);
         vec3 targetDirection = normalize(playerPos + playerDirection * 50.0 - targetPosition);
-        wEye = lerp(wEye, targetPosition, dt * followSpeed);
-        wFront = normalize(lerp(wFront, targetDirection, dt * followSpeed / 2));
+        pos = lerp(pos, targetPosition, dt * followSpeed);
+        forward = normalize(lerp(forward, targetDirection, dt * followSpeed / 2));
     }
-
 
     void rotate(int pX, int pY) {
         if (firstMouse) {
@@ -83,43 +85,38 @@ public:
         direction.x = cos(radians(yaw)) * cos(radians(pitch));
         direction.y = sin(radians(pitch));
         direction.z = sin(radians(yaw)) * cos(radians(pitch));
-        wFront = normalize(direction);
+        forward = normalize(direction);
     }
 
     void move(float deltaTime) {
-        float currentSpeed = (KEYDOWN_CTRL ? fastSpeed : walkSpeed);
-        float step = currentSpeed * deltaTime;
+        float speed = KEYDOWN_CTRL ? speedSprint : speedNormal;
+        float step = speed * deltaTime;
 
-        vec3 front = normalize(wFront);
-        vec3 right = normalize(cross(front, wUp));
-        vec3 up = wUp;
+        vec3 front = normalize(forward);
+        vec3 right = normalize(cross(front, up));
 
-        if (KEYDOWN_W)      wEye += step * front;
-        if (KEYDOWN_S)      wEye -= step * front;
-        if (KEYDOWN_A)      wEye -= step * right;
-        if (KEYDOWN_D)      wEye += step * right;
-        if (KEYDOWN_SPACE)  wEye += step * up;
-        if (KEYDOWN_SHIFT)  wEye -= step * up;
+        if (KEYDOWN_W)      pos += step * front;
+        if (KEYDOWN_S)      pos -= step * front;
+        if (KEYDOWN_A)      pos -= step * right;
+        if (KEYDOWN_D)      pos += step * right;
+        if (KEYDOWN_SPACE)  pos += step * up;
+        if (KEYDOWN_SHIFT)  pos -= step * up;
     }
 
-    vec3 getEyePos() {
-        return wEye;
+    vec3 getPos() {
+        return pos;
     }
 
-    void setEyePos(vec3 pos) {
-        wEye = pos;
+    void setPos(vec3 cameraPos) {
+        pos = cameraPos;
     }
 
-    vec3 getEyeDir() {
-        return wFront;
+    vec3 getDir() {
+        return forward;
     }
 
-    void setEyeDir(vec3 dir) {
-        wFront = dir;
-    }
-
-    vec3 getEyeUp() {
-        return wUp;
+    void setDir(vec3 cameraDir) {
+        forward = cameraDir;
     }
 
     void setFirstMouse() {
@@ -127,26 +124,24 @@ public:
     }
 
     mat4 V() {
-        vec3 w = normalize(-wFront);            // backward
-        vec3 u = normalize(cross(wUp, w));      // right
-        vec3 v = cross(w, u);                   // up
+        vec3 w = normalize(-forward);
+        vec3 u = normalize(cross(up, w));
+        vec3 v = cross(w, u);
 
         return mat4(
             vec4(u.x, v.x, w.x, 0.0),
             vec4(u.y, v.y, w.y, 0.0),
             vec4(u.z, v.z, w.z, 0.0),
-            vec4(-dot(u, wEye), -dot(v, wEye), -dot(w, wEye), 1.0)
+            vec4(-dot(u, pos), -dot(v, pos), -dot(w, pos), 1.0)
         );
     }
 
     mat4 P() {
-        float f = 1.0f / tanf(radians(fov) * 0.5f); // = sy
-
         return mat4(
-            vec4(f / asp, 0.0f, 0.0f, 0.0f),
-            vec4(0.0f, f, 0.0f, 0.0f),
-            vec4(0.0f, 0.0f, -(bp + fp) / (bp - fp), -1.0f),
-            vec4(0.0f, 0.0f, -(2.0f * bp * fp) / (bp - fp), 0.0f)
+            vec4(focalLength / aspectRatio, 0.0f, 0.0f, 0.0f),
+            vec4(0.0f, focalLength, 0.0f, 0.0f),
+            vec4(0.0f, 0.0f, -(nearPlane + farPlane) / (nearPlane - farPlane), -1.0f),
+            vec4(0.0f, 0.0f, -(2.0f * nearPlane * farPlane) / (nearPlane - farPlane), 0.0f)
         );
     }
 };

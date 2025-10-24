@@ -3,7 +3,6 @@
 #include "geometry.h"
 #include "shader.h"
 #include "InstanceBatch.h"
-#include "InstanceShader.h"
 #include "TerrainHeightCS.h"
 
 class InstanceField {
@@ -53,9 +52,9 @@ private:
             terrainHeightCS->Dispatch(vec3(x, maxHeight, z), maxHeight, objHeight, segSSBO, segCount);
             if (objHeight < 0.01f) continue; // skip if underground
 
-            vec3 pos(x, objHeight, z);
+            vec3 pos = vec3(x, objHeight, z);
             float yaw = randf(0.0f, 2.0f * M_PI);
-            mat4 M = TranslateMatrix(pos) * RotationMatrix(yaw, vec3(0, 1, 0)) * ScaleMatrix(vec3(1, 1, 1));
+            mat4 M = TranslateMatrix(pos) * RotationMatrix(yaw, vec3(0.0f, 1.0f, 0.0f)) * ScaleMatrix(vec3(1.0f, 1.0f, 1.0f));
 
             int variant = variantPicker(rng);
             outPerVariant[variant].push_back(M);

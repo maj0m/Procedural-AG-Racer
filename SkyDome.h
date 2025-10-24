@@ -17,7 +17,7 @@ public:
 	}
 
 	void Draw(RenderState& state) {
-		state.M = TranslateMatrix(state.wEye) * ScaleMatrix(vec3(1.0, 1.0, 1.0));
+		state.M = TranslateMatrix(state.cameraPos) * ScaleMatrix(vec3(1.0, 1.0, 1.0));
 		state.MVP = state.P * state.V * state.M;
 		shader->Bind(state);
 

@@ -4,20 +4,23 @@
 #include "renderstate.h"
 #include "light.h"
 #include "chunkmanager.h"
-#include <iostream>
 #include "colorpalette.h"
 #include "SkyDome.h"
 #include "Player.h"
-#include "SharedResources.h"
-#include "WorldConfig.h"
-#include "FPSCounter.h"
 #include "material.h"
+#include "trunkshader.h"
+#include "leafshader.h"
+#include "InstanceShader.h"
+#include "PostProcessShader.h"
+#include "watershader.h"
+#include "terrainshader.h"
+#include "plane.h"
 #include "cactus.h"
 #include "trunk.h"
 #include "leaves.h"
-#include "trunkshader.h"
-#include "leafshader.h"
-#include "PostProcessShader.h"
+#include "SharedResources.h"
+#include "WorldConfig.h"
+#include "FPSCounter.h"
 #include "ShadowMap.h"
 
 enum class ControlMode { Freecam, Player };
@@ -56,9 +59,8 @@ class Scene {
 		state.P = camera->P();
 		state.invP = Inverse(state.P);
 
-		state.wEye = camera->getEyePos();
-		state.wFront = camera->getEyeDir();
-		state.wUp = camera->getEyeUp();
+		state.cameraPos = camera->getPos();
+		state.cameraDir = camera->getDir();
 		state.time = glfwGetTime();
 	}
 
@@ -135,7 +137,7 @@ class Scene {
 
 	void updateLightMatrices() {
 		// Focus the shadow box around the camera
-		vec3 camPos = camera->getEyePos();
+		vec3 camPos = camera->getPos();
 		vec3 center = vec3(floor(camPos.x / cfg.chunkSize), 0.0f, floor(camPos.z / cfg.chunkSize)) * cfg.chunkSize;
 		vec3 lightDir = -vec3(sun.data.dir.x, sun.data.dir.y, sun.data.dir.z);
 		vec3 lightPos = center - lightDir * 1200.0f;     // pull back enough to see the box
@@ -161,7 +163,7 @@ public:
 		updateState(state);
 
 		// Physics + movement
-		chunkManager->Update(camera->getEyePos());
+		chunkManager->Update(camera->getPos());
 		switch (controlMode) {
 			case ControlMode::Freecam: camera->move(deltaTime); break;
 			case ControlMode::Player:  player->Update(deltaTime); break;
@@ -316,7 +318,7 @@ public:
 		skyDome = new SkyDome();
 		chunkManager = new ChunkManager(&cfg, &resources);
 		camera = new Camera();
-		camera->setEyePos(chunkManager->getSpawnPoint());
+		camera->setPos(chunkManager->getSpawnPoint());
 		player = new Player(camera, chunkManager);
 	}
 
@@ -333,7 +335,7 @@ public:
 
 		// FPS and Coordinates
 		ImGui::Text("FPS: %d, AVG: %.1f", fpsCounter.getFPS(), fpsCounter.getAverageFPS());
-		ImGui::Text("X: %.1f, Y: %.1f, Z: %.1f", camera->getEyePos().x, camera->getEyePos().y, camera->getEyePos().z);
+		ImGui::Text("X: %.1f, Y: %.1f, Z: %.1f", camera->getPos().x, camera->getPos().y, camera->getPos().z);
 
 		// Color Palette
 		if (palette) {
@@ -373,7 +375,7 @@ public:
 				player->Respawn();
 			}
 			else {
-				camera->setEyePos(chunkManager->getSpawnPoint());
+				camera->setPos(chunkManager->getSpawnPoint());
 			}
 		}
 

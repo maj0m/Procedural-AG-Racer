@@ -1,15 +1,10 @@
 #pragma once
-
 #include "framework.h"
-#include "lut.h"
 #include "shader.h"
 #include "renderstate.h"
 #include "MarchingCubesCS.h"
 #include <vector>
 #include "GrassField.h"
-#include "object.h"
-#include "plane.h"
-#include "terrainshader.h"
 #include "TrackManager.h"
 #include "InstanceField.h"
 #include "SharedResources.h"

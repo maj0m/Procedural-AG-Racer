@@ -14,7 +14,7 @@ public:
 		Use();
 
 		setUniform(state.time, "u_time");
-		setUniform(state.wEye, "u_camPos_WS");
+		setUniform(state.cameraPos, "u_camPos_WS");
 		setUniform(state.V, "u_V");
 		setUniform(state.P, "u_P");
 
