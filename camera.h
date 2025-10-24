@@ -27,8 +27,8 @@ public:
         fov = 75.0f;
         aspectRatio = (float)WINDOW_WIDTH / WINDOW_HEIGHT;
         focalLength = 1.0f / tanf(radians(fov) * 0.5f);
-        farPlane = 0.1f;
-        nearPlane = 2000.0f;
+        nearPlane = 0.1f;
+        farPlane = 2000.0f;
     }
 
     std::vector<vec4> getFrustumPlanes() {
@@ -103,6 +103,28 @@ public:
         if (KEYDOWN_SHIFT)  pos -= step * up;
     }
 
+    mat4 V() {
+        vec3 w = normalize(-forward);
+        vec3 u = normalize(cross(up, w));
+        vec3 v = cross(w, u);
+
+        return mat4(
+            vec4(u.x, v.x, w.x, 0.0),
+            vec4(u.y, v.y, w.y, 0.0),
+            vec4(u.z, v.z, w.z, 0.0),
+            vec4(-dot(u, pos), -dot(v, pos), -dot(w, pos), 1.0)
+        );
+    }
+
+    mat4 P() {
+        return mat4(
+            vec4(focalLength / aspectRatio, 0.0f, 0.0f, 0.0f),
+            vec4(0.0f, focalLength, 0.0f, 0.0f),
+            vec4(0.0f, 0.0f, -(farPlane + nearPlane) / (farPlane - nearPlane), -1.0f),
+            vec4(0.0f, 0.0f, -(2.0f * farPlane * nearPlane) / (farPlane - nearPlane), 0.0f)
+        );
+    }
+
     vec3 getPos() {
         return pos;
     }
@@ -123,25 +145,11 @@ public:
         firstMouse = true;
     }
 
-    mat4 V() {
-        vec3 w = normalize(-forward);
-        vec3 u = normalize(cross(up, w));
-        vec3 v = cross(w, u);
-
-        return mat4(
-            vec4(u.x, v.x, w.x, 0.0),
-            vec4(u.y, v.y, w.y, 0.0),
-            vec4(u.z, v.z, w.z, 0.0),
-            vec4(-dot(u, pos), -dot(v, pos), -dot(w, pos), 1.0)
-        );
+    float getFarPlane() {
+        return farPlane;
     }
 
-    mat4 P() {
-        return mat4(
-            vec4(focalLength / aspectRatio, 0.0f, 0.0f, 0.0f),
-            vec4(0.0f, focalLength, 0.0f, 0.0f),
-            vec4(0.0f, 0.0f, -(nearPlane + farPlane) / (nearPlane - farPlane), -1.0f),
-            vec4(0.0f, 0.0f, -(2.0f * nearPlane * farPlane) / (nearPlane - farPlane), 0.0f)
-        );
+    float getNearPlane() {
+        return nearPlane;
     }
 };

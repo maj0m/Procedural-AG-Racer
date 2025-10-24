@@ -54,14 +54,15 @@ class Scene {
 	GLuint sceneDepthCopy = 0;   // depth readback for SSR
 
 	void updateState(RenderState& state) {
+		state.time = glfwGetTime();
+		state.cameraPos = camera->getPos();
+		state.cameraDir = camera->getDir();
+		state.nearPlane = camera->getNearPlane();
+		state.farPlane = camera->getFarPlane();
 		state.M = mat4();
 		state.V = camera->V();
 		state.P = camera->P();
-		state.invP = Inverse(state.P);
-
-		state.cameraPos = camera->getPos();
-		state.cameraDir = camera->getDir();
-		state.time = glfwGetTime();
+		state.invP = Inverse(state.P);		
 	}
 
 	void createFullscreenTriangle() {
@@ -143,8 +144,8 @@ class Scene {
 		vec3 lightPos = center - lightDir * 1200.0f;     // pull back enough to see the box
 		float halfSize = 2000.0f;     // covers this much around camera
 		float halfHeight = 2000.0f;
-		float nearPlane = 0.1f;
-		float farPlane = 2000.0f;
+		float nearPlane = camera->getNearPlane();
+		float farPlane = camera->getFarPlane();
 
 		// Build matrices
 		lightV = LookAt(lightPos, center, vec3(0.0f, 1.0f, 0.0f));

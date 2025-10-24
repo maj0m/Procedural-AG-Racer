@@ -5,6 +5,7 @@ struct RenderState {
 	float time;
 	vec3 cameraPos;
 	vec3 cameraDir;
+	float nearPlane, farPlane;
 	mat4 MVP, M, V, P;
 	mat4 invP;
 	vec3 chunkId;
