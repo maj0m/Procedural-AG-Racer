@@ -106,7 +106,6 @@ public:
 
     bool isChunkVisible(const vec3& chunkPos, float chunkSize, const std::vector<vec4>& frustumPlanes, const vec3& cameraPos) {
         // Build AABB
-        const float half = 0.5f * chunkSize;
         AABB box;
         box.min = chunkPos;
         box.max = chunkPos + vec3(chunkSize, chunkSize, chunkSize);

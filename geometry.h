@@ -1,7 +1,6 @@
 #pragma once
 #include "framework.h"
 
-
 class Geometry {
 protected:
 	unsigned int vao = 0, vbo = 0;
@@ -19,7 +18,7 @@ public:
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, vtxData.size() * sizeof(vec3), vtxData.data(), GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0); // AttArr 0 = POSITION
+		glEnableVertexAttribArray(0); // vtxPos
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void*)0);
 	}
 
