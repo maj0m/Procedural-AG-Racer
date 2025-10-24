@@ -46,6 +46,9 @@ class Player {
     float prevUpSpeed = 0.0f;
 
     bool insideTerrain = false;
+    
+    const float PHYSICS_DT = 0.01f; // 100 Hz physics update
+    float timeAccumulator = 0.0f;
 
 public:
     Player(Camera* camera, ChunkManager* chunkManager) : camera(camera), chunkManager(chunkManager) {       
@@ -62,6 +65,8 @@ public:
 
 
     void Update(float dt) {
+        timeAccumulator += dt;
+
         // Camera
         camera->followPlayer(pos, forward, 5.0, 3.0, 32.0, dt);
 
@@ -74,9 +79,13 @@ public:
         UpdateRotation();
         UpdateRudder(dt);
         
-        GLuint segSSBO = 0, segCount = 0;
-        chunkManager->getSegIndexForPos(pos, segSSBO, segCount);
-        groundDistanceCS->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
+        // Ground distance sampling (fixed timestep)
+        if (timeAccumulator >= PHYSICS_DT) {
+            GLuint segSSBO = 0, segCount = 0;
+            chunkManager->getSegIndexForPos(pos, segSSBO, segCount);
+            groundDistanceCS->Dispatch(playerObject->pos, hoverHeight, groundDist, segSSBO, segCount); // Calculate distance to ground
+            timeAccumulator -= PHYSICS_DT;
+        }
 
         // Gravity
         acc += gravity;
