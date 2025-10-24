@@ -2,30 +2,27 @@
 precision highp float;
 
 layout(std430, binding = 0) buffer VertexBuffer {
-    uint vertexCount;   // counts vertices written (multiple of 3)
-    uint _pad0;         // pad to 16 bytes for std430 alignment
+    uint vertexCount;
+    uint _pad0;
     uint _pad1;
     uint _pad2;
-    vec4 vertices[];    // payload starts at offset 16
+    vec4 vertices[];
 };
 		
-uniform mat4 MVP, M;					// MVP, Model
-uniform vec3 wEye;						// Eye position
-uniform mat4 lightVP;
+uniform vec3 u_camPos_WS;
+uniform mat4 u_V, u_P;
+uniform mat4 u_lightVP;
 
-out vec3 wView;							// view in world space
-out float wDist;						// distance from camera
-out vec3 vtxPos;
-out vec4 lightClip;
+out float viewDist_WS;
+out vec3 viewDir_WS;
+out vec4 lightPos_CS;
 
 // ---------- Main ----------
 void main() {
-	vec3 vertexPos = vertices[gl_VertexID].xyz;
-	gl_Position = MVP * vec4(vertexPos, 1);			// to NDC
+	vec3 vtxPos_WS = vertices[gl_VertexID].xyz;
+	gl_Position = u_P * u_V * vec4(vtxPos_WS, 1);
 
-	vec4 wPos = M * vec4(vertexPos, 1);
-	wView  = wEye - wPos.xyz;
-	wDist = length(wView);				// Distance from eye to vertex
-	vtxPos = vertexPos;
-    lightClip = lightVP * wPos;
+	viewDir_WS  = u_camPos_WS - vtxPos_WS.xyz;
+	viewDist_WS = length(viewDir_WS);
+    lightPos_CS = u_lightVP * vec4(vtxPos_WS, 1.0);
 }

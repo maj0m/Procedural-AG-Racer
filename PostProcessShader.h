@@ -9,6 +9,7 @@ public:
 
 	void Bind(RenderState state) override {
 		Use();
-		setUniform(0, "uScene");
+		
+		setUniform(0, "u_sceneColor");
 	}
 };

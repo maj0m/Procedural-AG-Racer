@@ -22,29 +22,27 @@ layout(std140, binding = 6) uniform Materials {
 #define material (materials[MAT_WATER])
 
 layout(std140, binding = 7) uniform ColorPalette {
-    vec4 terrainColors[5];
-	vec4 angleThresholds;
-    vec4 grassColor;
-    vec4 waterColor;
-    vec4 skyColor;
-    vec4 atmosphereColor;
-    float fogDensity;
+    vec4 u_terrainColors[5];
+	vec4 u_angleThresholds;
+    vec4 u_grassColor;
+    vec4 u_waterColor;
+    vec4 u_skyColor;
+    vec4 u_atmosphereColor;
+    float u_fogDensity;
 };
 
-uniform sampler2D u_shadowMap;
-uniform vec2      u_shadowTexel;  // (1/width, 1/height)
-uniform float     u_shadowBias;
 uniform sampler2D u_sceneColor;
 uniform sampler2D u_sceneDepth;
-uniform mat4      V, P;
-uniform mat4      invP;
+uniform sampler2D u_shadowMap;
+uniform float     u_shadowBias;
+uniform vec2      u_shadowTexel;
+uniform mat4      u_V, u_P;
+uniform mat4      u_invP;
 
-in float wDist;
-in vec3 wView;		
-in vec3 vtxPos;
-in vec4 lightClip;
-in vec3 vtxPosView;
-in vec4 vtxPosProj;
+in float viewDist_WS;
+in vec3 vtxPos_VS;
+in vec3 viewDir_WS;
+in vec4 lightPos_CS;
 
 out vec4 fragmentColor;
 
@@ -74,29 +72,26 @@ float shadowMask(vec4 lightClip) {
 }
 
 // ---------- SSR ----------
-vec3 worldToView(vec3 n) { return normalize((V * vec4(n, 0.0)).xyz); }
-
 vec3 viewFromDepth(vec2 uv, float depth01) {
     // NDC
     float z = depth01 * 2.0 - 1.0;
     vec4 ndc = vec4(uv * 2.0 - 1.0, z, 1.0);
-    vec4 vs = invP * ndc;
+    vec4 vs = u_invP * ndc;
     return vs.xyz / vs.w;
 }
 
 // Returns uv of hit and weight (hit? 1:0)
 vec3 ssrTrace(vec3 originVS, vec3 dirVS) {
-    // marcher params
     const int   STEPS = 100;
-    const float STEP  = 5.0;      // view-space units
-    const float THICK = 10.0;      // thickness tolerance
+    const float STEP  = 5.0;
+    const float THICK = 10.0;   // thickness tolerance
     vec3 p = originVS;
 
     for (int i=0; i<STEPS; ++i) {
         p += dirVS * STEP;
 
         // project to screen
-        vec4 clip = P * vec4(p, 1.0);
+        vec4 clip = u_P * vec4(p, 1.0);
         vec3 ndc  = clip.xyz / clip.w;
         vec2 uv   = ndc.xy * 0.5 + 0.5;
 
@@ -118,22 +113,19 @@ vec3 ssrTrace(vec3 originVS, vec3 dirVS) {
 // ---------- Water Depth ----------
 float getWaterDepth() {
     vec2 screenUV = gl_FragCoord.xy / vec2(textureSize(u_sceneDepth, 0));
-
     float terrainDepth01 = texture(u_sceneDepth, screenUV).r;
-    float waterSurfaceDepth01 = (vtxPosProj.z / vtxPosProj.w) * 0.5 + 0.5;
+    vec3 terrainPos_VS = viewFromDepth(screenUV, terrainDepth01);
 
-    vec3 terrainView = viewFromDepth(screenUV, terrainDepth01);
-
-    float depth = vtxPosView.z - terrainView.z;
+    float depth = vtxPos_VS.z - terrainPos_VS.z;
     return max(0.0, depth);
 }
 
 // ---------- Main ----------
 void main() {
-	vec3 xTangent = dFdx(wView);
-	vec3 yTangent = dFdy(wView);
+	vec3 xTangent = dFdx(viewDir_WS);
+	vec3 yTangent = dFdy(viewDir_WS);
 	vec3 N = normalize(cross(xTangent, yTangent));
-	vec3 V = normalize(wView);
+	vec3 V = normalize(viewDir_WS);
 	vec3 L = normalize(u_lightDir.xyz);
 	vec3 H = normalize(L + V);
 	float NdotL = max(dot(N, L), 0.0);
@@ -141,7 +133,7 @@ void main() {
     float NdotH = max(dot(N, H), 0.0);
 	float spec = pow(NdotH, material.shininess_pad.x) * NdotL;
 
-	vec3 texColor = waterColor.xyz;
+	vec3 texColor = u_waterColor.xyz;
     float waterDepth = getWaterDepth();
 
 	// Foam
@@ -154,22 +146,21 @@ void main() {
 	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
 	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
-    float shadow = shadowMask(lightClip);
+    float shadow = shadowMask(lightPos_CS);
     vec3 radiance = ambient + (diffuse + specular) * shadow;
 
     // Base sky gradient
     float t = clamp(V.y * 0.5 + 0.5, 0.0, 1.0);
-    vec4 skyCol = mix(skyColor, atmosphereColor, t);
+    vec4 skyCol = mix(u_skyColor, u_atmosphereColor, t);
 
     // Build reflection ray in view space
-    vec3 Nvs = worldToView(normalize(N));
-    vec3 Vdir = normalize(-vtxPosView);              // camera at origin in VS
-    vec3 Rvs  = reflect(-Vdir, Nvs);
+    vec3 N_VS = normalize((u_V * vec4(N, 0.0)).xyz);
+    vec3 viewDir_VS = normalize(-vtxPos_VS);              // camera at origin in VS
+    vec3 reflection_VS  = reflect(-viewDir_VS, N_VS);
 
     // start just above the surface to avoid self-hits
-    vec3 start = vtxPosView + Nvs * 0.05;
-
-    vec3 hit = ssrTrace(start, Rvs);
+    vec3 start = vtxPos_VS + N_VS * 0.05;
+    vec3 hit = ssrTrace(start, reflection_VS);
 
     vec3 reflColor = skyCol.xyz;                 // fallback
     if (hit.z > 0.5) {
@@ -182,7 +173,7 @@ void main() {
     radiance = mix(radiance, reflColor, fresnel); 
 
 	// Fog
-    float fogFactor = exp(-fogDensity * wDist * wDist);
+    float fogFactor = exp(-u_fogDensity * viewDist_WS * viewDist_WS);
     vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);
 
     // Alpha

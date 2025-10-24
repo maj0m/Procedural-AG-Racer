@@ -21,7 +21,7 @@ public:
 	}
 
 	void Draw(RenderState& state) {
-		state.M = TranslateMatrix(pos) * rotation.toRotationMatrix() * ScaleMatrix(scale);;
+		state.M = TranslateMatrix(pos) * rotation.toRotationMatrix() * ScaleMatrix(scale);
 		state.MVP = state.P * state.V * state.M;
 		shader->Bind(state);
 		geometry->Draw();

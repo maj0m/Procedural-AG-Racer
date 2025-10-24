@@ -3,7 +3,6 @@
 #include <iostream>
 #include "globals.h"
 
-
 class Camera {
 private:
 
@@ -28,7 +27,6 @@ public:
         fp = 0.1f;
         bp = 2000.0f;
     }
-
 
     std::vector<vec4> getFrustumPlanes() {
         std::vector<vec4> planes(6);
@@ -128,8 +126,6 @@ public:
         firstMouse = true;
     }
 
-
-
     mat4 V() {
         vec3 w = normalize(-wFront);            // backward
         vec3 u = normalize(cross(wUp, w));      // right
@@ -143,7 +139,6 @@ public:
         );
     }
 
-
     mat4 P() {
         float f = 1.0f / tanf(radians(fov) * 0.5f); // = sy
 
@@ -154,7 +149,4 @@ public:
             vec4(0.0f, 0.0f, -(2.0f * bp * fp) / (bp - fp), 0.0f)
         );
     }
-
 };
-
-

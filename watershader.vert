@@ -2,7 +2,6 @@
 precision highp float;
 
 layout(location = 0) in vec3 vertexPos;
-layout(location = 1) in vec2 vertexUV;
 
 // UBO set in ChunkManager
 layout(std140, binding = 3) uniform TerrainParams {
@@ -26,16 +25,15 @@ layout(std140, binding = 3) uniform TerrainParams {
 
 uniform float u_time;
 uniform vec2 u_planeOriginXZ;
-uniform mat4 MVP, M, V, P;					// MVP, Model
-uniform vec3 wEye;						// Eye position
-uniform mat4 lightVP;
+uniform vec3 u_camPos_WS;
+uniform mat4 u_V, u_P;
+uniform mat4 u_lightVP;
 
-out float wDist;
-out vec3 wView;
-out vec3 vtxPos;
-out vec4 lightClip;
-out vec3 vtxPosView;
-out vec4 vtxPosProj;
+out float viewDist_WS;
+out vec3 viewDir_WS;
+out vec3 vtxPos_WS;
+out vec3 vtxPos_VS;
+out vec4 lightPos_CS;
 
 // ---------- Seed ----------
 vec3 seedOffset(int s) {
@@ -101,16 +99,14 @@ float fbmSimplex3D(vec3 p, float freq, float amp, float fMul, float aMul, int oc
 
 // ---------- Main ----------
 void main() {
-	vtxPos = vertexPos + vec3(u_planeOriginXZ.x, u_waterLevel, u_planeOriginXZ.y);
-	vtxPos.y += fbmSimplex3D(vec3(vtxPos.x, u_time * 10.0, vtxPos.z), 0.02, 1.0, 2.0, 0.5, 2);
+	vtxPos_WS = vertexPos + vec3(u_planeOriginXZ.x, u_waterLevel, u_planeOriginXZ.y);
+	vtxPos_WS.y += fbmSimplex3D(vec3(vtxPos_WS.x, u_time * 10.0, vtxPos_WS.z), 0.02, 1.0, 2.0, 0.5, 2);
 
-	vec4 clipPos = MVP * vec4(vtxPos, 1.0);
-	gl_Position = clipPos;
+	vec4 vtxPos_CS = u_P * u_V * vec4(vtxPos_WS, 1.0);
+	gl_Position = vtxPos_CS;
 
-	vec4 wPos = M * vec4(vtxPos, 1);
-	wView  = wEye - wPos.xyz;
-	wDist = length(wView);         // Distance from eye to vertex
-	lightClip = lightVP * wPos;
-	vtxPosView = (V * vec4(vtxPos, 1.0)).xyz;
-	vtxPosProj = clipPos;
+	viewDir_WS  = u_camPos_WS - vtxPos_WS.xyz;
+	viewDist_WS = length(viewDir_WS);         // Distance from eye to vertex
+	lightPos_CS = u_lightVP * vec4(vtxPos_WS, 1.0);
+	vtxPos_VS = (u_V * vec4(vtxPos_WS, 1.0)).xyz;
 }

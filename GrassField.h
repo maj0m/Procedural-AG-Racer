@@ -6,7 +6,6 @@
 #include "GrassScatterCS.h"
 #include "TrackManager.h"
 
-
 struct GrassInstance {
     // 32 bytes
     vec3 pos;     // world pos
@@ -101,19 +100,10 @@ public:
         glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, phase)));
         glVertexAttribDivisor(5, 1);
 
-        // layout(location=6) = float inShadow
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride, (void*)(headerSize + offsetof(GrassInstance, _pad)));
-        glVertexAttribDivisor(6, 1);
-
         glBindVertexArray(0);
     }
 
     void Draw(RenderState& state) {
-        state.M = mat4();
-        state.MVP = state.P * state.V * state.M;
-
-        // set uniforms & draw
         shader->Bind(state);
         glBindVertexArray(vao);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 3, (GLsizei)instanceCount);

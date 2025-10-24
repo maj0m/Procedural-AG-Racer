@@ -1,22 +1,22 @@
 #version 450 core
 precision highp float;
 
-layout(location=0) in vec3 vtxPos;
-layout(location=1) in mat4 M;
+layout(location=0) in vec3 vtxPos_OS;
+layout(location=1) in mat4 instM;
 
-uniform mat4 V, P;
-uniform vec3 wEye;
-uniform mat4 lightVP;
+uniform vec3 u_camPos_WS;
+uniform mat4 u_V, u_P;
+uniform mat4 u_lightVP;
 
-out vec3 wView;
-out float wDist;
-out vec4 lightClip;
+out float viewDist_WS;
+out vec3 viewDir_WS;
+out vec4 lightPos_CS;
 
-void main(){
-    gl_Position = P * V * M * vec4(vtxPos, 1.0);
+void main() {
+    vec4 vtxPos_WS = instM * vec4(vtxPos_OS, 1.0);
+    gl_Position = u_P * u_V * vtxPos_WS;
 
-    vec4 wPos = M * vec4(vtxPos, 1);
-    wView  = wEye - wPos.xyz;
-    wDist = length(wView);
-    lightClip = lightVP * wPos;
+    viewDir_WS  = u_camPos_WS - vtxPos_WS.xyz;
+    viewDist_WS = length(viewDir_WS);
+    lightPos_CS = u_lightVP * vtxPos_WS;
 }

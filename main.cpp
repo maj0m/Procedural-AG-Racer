@@ -29,7 +29,7 @@ int main(int, char**) {
         glfwTerminate();
         return -1;
     }
-    glfwSetWindowPos(window, 50, 50);
+    glfwSetWindowPos(window, 0, 30);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0); // VSync: 1 = ON, 0 = OFF
 

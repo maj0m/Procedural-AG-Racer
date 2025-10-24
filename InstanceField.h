@@ -23,13 +23,11 @@ public:
     }
 
     void Draw(RenderState& state) {
-
         batch->Draw(state);
-
     }
 
 private:
-    void scatterCPU(const vec3& chunkId, float chunkSize, std::vector<std::vector<mat4>>& outPerVariant, float ratePerChunk = 4.0f, int maxPerChunk = 6) {
+    void scatterCPU(const vec3& chunkId, float chunkSize, std::vector<std::vector<mat4>>& outPerVariant, float ratePerChunk = 2.0f, int maxPerChunk = 4) {
         // Deterministic per-chunk RNG
         uint32_t seed = hash3(chunkId);
         std::mt19937 rng(seed);

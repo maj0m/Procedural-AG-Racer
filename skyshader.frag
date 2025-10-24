@@ -8,31 +8,32 @@ layout(std140, binding = 2) uniform Lighting {
 };
 
 layout(std140, binding = 7) uniform ColorPalette {
-    vec4 terrainColors[5];
-	vec4 angleThresholds;
-    vec4 grassColor;
-    vec4 waterColor;
-    vec4 skyColor;
-    vec4 atmosphereColor;
-    float fogDensity;
+    vec4 u_terrainColors[5];
+	vec4 u_angleThresholds;
+    vec4 u_grassColor;
+    vec4 u_waterColor;
+    vec4 u_skyColor;
+    vec4 u_atmosphereColor;
+    float u_fogDensity;
 };
 
-in vec3 wView;
+in vec3 viewDir_WS;
+
 out vec4 fragmentColor;
 
 const float sunDiscSize = 0.08;
 const float sunGlow = 0.3;
 
-void main(){
-    vec3 dir = normalize(-wView);
+void main() {
+    vec3 viewDir = normalize(-viewDir_WS);
 
     // Base sky gradient
-    float t = clamp(dir.y*0.5 + 0.5, 0.0, 1.0);
-    vec4 skyCol = mix(skyColor, atmosphereColor, t);
+    float t = clamp(viewDir.y * 0.5 + 0.5, 0.0, 1.0);
+    vec4 skyCol = mix(u_skyColor, u_atmosphereColor, t);
 
     // Sun disc + halo
     vec3 sunDir = normalize(u_lightDir.xyz);
-    float cosAng = clamp(dot(dir, sunDir), -1.0, 1.0);
+    float cosAng = clamp(dot(viewDir, sunDir), -1.0, 1.0);
     float ang = acos(cosAng);
 
     // Inside disc -> 1, soft edge

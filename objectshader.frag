@@ -22,22 +22,22 @@ layout(std140, binding = 6) uniform Materials {
 #define material (materials[MAT_OBJECT])
 
 layout(std140, binding = 7) uniform ColorPalette {
-    vec4 terrainColors[5];
-	vec4 angleThresholds;
-    vec4 grassColor;
-    vec4 waterColor;
-    vec4 skyColor;
-    vec4 atmosphereColor;
-    float fogDensity;
+    vec4 u_terrainColors[5];
+	vec4 u_angleThresholds;
+    vec4 u_grassColor;
+    vec4 u_waterColor;
+    vec4 u_skyColor;
+    vec4 u_atmosphereColor;
+    float u_fogDensity;
 };
 
 uniform sampler2D u_shadowMap;
-uniform vec2      u_shadowTexel;  // (1/width, 1/height)
 uniform float     u_shadowBias;
+uniform vec2      u_shadowTexel;
 
-in vec3 wView;				
-in float wDist;
-in vec4 lightClip;
+in float viewDist_WS;
+in vec3 viewDir_WS;
+in vec4 lightPos_CS;
 
 out vec4 fragmentColor;
 
@@ -68,14 +68,13 @@ float shadowMask(vec4 lightClip) {
 
 // ---------- Main ----------
 void main() {
-	vec3 xTangent = dFdx(wView);
-	vec3 yTangent = dFdy(wView);
+	vec3 xTangent = dFdx(viewDir_WS);
+	vec3 yTangent = dFdy(viewDir_WS);
 	vec3 N = normalize(cross(xTangent, yTangent));
-	vec3 V = normalize(wView);
+	vec3 V = normalize(viewDir_WS);
 	vec3 L = normalize(u_lightDir.xyz);
 	vec3 H = normalize(L + V);
 	float NdotL = max(dot(N, L), 0.0);
-	float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
 	float spec = pow(NdotH, material.shininess_pad.x) * NdotL;
 
@@ -85,15 +84,15 @@ void main() {
 	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
 	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
-    float shadow = clamp(shadowMask(lightClip), 0.4, 1.0);
+    float shadow = clamp(shadowMask(lightPos_CS), 0.4, 1.0);
     vec3 radiance = ambient + (diffuse + specular) * shadow;
 
 	// Base sky gradient
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);
-    vec4 skyCol = mix(skyColor, atmosphereColor, t);
+    vec4 skyCol = mix(u_skyColor, u_atmosphereColor, t);
 
 	// Fog
-    float fogFactor = exp(-fogDensity * wDist * wDist);
+    float fogFactor = exp(-u_fogDensity * viewDist_WS * viewDist_WS);
     vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);
 
 	fragmentColor = vec4(finalColor, 1.0);

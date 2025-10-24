@@ -16,4 +16,4 @@ vec4 CLEAR_COLOR = vec4(0.45f, 0.55f, 0.60f, 1.00f);
 const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
 const unsigned int GUI_WIDTH = 320;
-const unsigned int GUI_HEIGHT = 600;
+const unsigned int GUI_HEIGHT = 640;

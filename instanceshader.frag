@@ -22,17 +22,22 @@ layout(std140, binding = 6) uniform Materials {
 #define material (materials[MAT_OBJECT])
 
 layout(std140, binding = 7) uniform ColorPalette {
-    vec4 terrainColors[5];
-	vec4 angleThresholds;
-    vec4 grassColor;
-    vec4 waterColor;
-    vec4 skyColor;
-    vec4 atmosphereColor;
-    float fogDensity;
+    vec4 u_terrainColors[5];
+	vec4 u_angleThresholds;
+    vec4 u_grassColor;
+    vec4 u_waterColor;
+    vec4 u_skyColor;
+    vec4 u_atmosphereColor;
+    float u_fogDensity;
 };
 
-in vec3 wView;		
-in float wDist;
+uniform sampler2D u_shadowMap;
+uniform float     u_shadowBias;
+uniform vec2      u_shadowTexel;
+
+in float viewDist_WS;
+in vec3 viewDir_WS;		
+in vec4 lightPos_CS;
 
 out vec4 fragmentColor;
 
@@ -43,24 +48,48 @@ vec3 normalToColor(vec3 N) {
 
 	// Color based on tri angle
 	vec3 col = vec3(0.0);
-	if		(angle < angleThresholds.x)	col = mix(terrainColors[0].xyz, terrainColors[1].xyz, angle / angleThresholds.x);
-	else if (angle < angleThresholds.y)	col = mix(terrainColors[1].xyz, terrainColors[2].xyz, (angle - angleThresholds.x) / (angleThresholds.y - angleThresholds.x));
-	else if (angle < angleThresholds.z)	col = mix(terrainColors[2].xyz, terrainColors[3].xyz, (angle - angleThresholds.y) / (angleThresholds.z - angleThresholds.y));
-	else if (angle < angleThresholds.w)	col = mix(terrainColors[3].xyz, terrainColors[4].xyz, (angle - angleThresholds.z) / (angleThresholds.w - angleThresholds.z));
-	else								col = terrainColors[4].xyz;
+	if		(angle < u_angleThresholds.x)	col = mix(u_terrainColors[0].xyz, u_terrainColors[1].xyz, angle / u_angleThresholds.x);
+	else if (angle < u_angleThresholds.y)	col = mix(u_terrainColors[1].xyz, u_terrainColors[2].xyz, (angle - u_angleThresholds.x) / (u_angleThresholds.y - u_angleThresholds.x));
+	else if (angle < u_angleThresholds.z)	col = mix(u_terrainColors[2].xyz, u_terrainColors[3].xyz, (angle - u_angleThresholds.y) / (u_angleThresholds.z - u_angleThresholds.y));
+	else if (angle < u_angleThresholds.w)	col = mix(u_terrainColors[3].xyz, u_terrainColors[4].xyz, (angle - u_angleThresholds.z) / (u_angleThresholds.w - u_angleThresholds.z));
+	else								col = u_terrainColors[4].xyz;
 	return col;
+}
+
+// ---------- Shadow ----------
+float shadowMask(vec4 lightClip) {
+    // Clip to NDC
+    vec3 proj = lightClip.xyz / lightClip.w;
+    vec2 uv = proj.xy * 0.5 + 0.5;
+    float depth = proj.z * 0.5 + 0.5;
+
+    // Outside map
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+
+    // 3x3 PCF
+    float vis = 0.0;
+    int kernel = 1;
+    for (int dx = -kernel; dx <= kernel; ++dx) {
+        for (int dy = -kernel; dy <= kernel; ++dy) {
+            vec2 offset = vec2(dx, dy) * u_shadowTexel;
+            float closest = texture(u_shadowMap, uv + offset).r;
+            float current = depth - u_shadowBias;
+            vis += (current <= closest) ? 1.0 : 0.0;
+        }
+    }
+
+    return vis / pow(kernel * 2 + 1, 2);
 }
 
 // ---------- Main ----------
 void main() {
-	vec3 xTangent = dFdx(wView);
-	vec3 yTangent = dFdy(wView);
+	vec3 xTangent = dFdx(viewDir_WS);
+	vec3 yTangent = dFdy(viewDir_WS);
 	vec3 N = normalize(cross(xTangent, yTangent));
-	vec3 V = normalize(wView);
+	vec3 V = normalize(viewDir_WS);
 	vec3 L = normalize(u_lightDir.xyz);
 	vec3 H = normalize(L + V);
 	float NdotL = max(dot(N, L), 0.0);
-	float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
 	float spec = pow(NdotH, material.shininess_pad.x) * NdotL;
 
@@ -70,14 +99,15 @@ void main() {
 	vec3 diffuse = material.kd.xyz * texColor * NdotL * u_lightLe.xyz;
 	vec3 specular = material.ks.xyz * spec * u_lightLe.xyz;
 
-    vec3 radiance = ambient + diffuse + specular;
+    float shadow = shadowMask(lightPos_CS);
+    vec3 radiance = ambient + (diffuse + specular) * shadow;
 
 	// Base sky gradient
     float t = clamp(V.y*0.5 + 0.5, 0.0, 1.0);
-    vec4 skyCol = mix(skyColor, atmosphereColor, t);
+    vec4 skyCol = mix(u_skyColor, u_atmosphereColor, t);
 
 	// Fog
-    float fogFactor = exp(-fogDensity * wDist * wDist);
+    float fogFactor = exp(-u_fogDensity * viewDist_WS * viewDist_WS);
     vec3 finalColor = mix(skyCol.xyz, radiance, fogFactor);
 
 	fragmentColor = vec4(finalColor, 1.0);

@@ -82,8 +82,6 @@ public:
     }
 
     void Draw(RenderState& state) {
-        state.M = mat4();
-        state.MVP = state.P * state.V * state.M;
         state.chunkId = id;
         state.chunkSize = cfg->chunkSize;
 

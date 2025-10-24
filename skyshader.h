@@ -13,9 +13,8 @@ public:
 	void Bind(RenderState state) {
 		Use();
 
-		//setUniform(state.time, "u_time");
-		setUniform(state.MVP, "MVP");
-		setUniform(state.M, "M");
-		setUniform(state.wEye, "wEye");
+		setUniform(state.wEye, "u_camPos_WS");
+		setUniform(state.M, "u_M");
+		setUniform(state.MVP, "u_MVP");
 	}
 };

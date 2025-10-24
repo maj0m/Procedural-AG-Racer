@@ -14,11 +14,12 @@ public:
 		Use();
 
 		setUniform(state.time, "u_time");
-		setUniform(state.MVP, "MVP");
-		setUniform(state.wEye, "wEye");
+		setUniform(state.wEye, "u_camPos_WS");
+		setUniform(state.V, "u_V");
+		setUniform(state.P, "u_P");
 
 		// Shadow
-		setUniform(state.lightVP, "lightVP");
+		setUniform(state.lightVP, "u_lightVP");
 		setUniform(state.shadowTexel, "u_shadowTexel");
 		setUniform(state.shadowBias, "u_shadowBias");
 		setUniform(2, "u_shadowMap");

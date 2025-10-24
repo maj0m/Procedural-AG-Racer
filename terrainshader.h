@@ -14,12 +14,12 @@ public:
 	void Bind(RenderState state) {
 		Use();
 
-		setUniform(state.MVP, "MVP");
-		setUniform(state.M, "M");
-		setUniform(state.wEye, "wEye");
+		setUniform(state.V, "u_V");
+		setUniform(state.P, "u_P");
+		setUniform(state.wEye, "u_camPos_WS");
 
 		// Shadow
-		setUniform(state.lightVP, "lightVP");
+		setUniform(state.lightVP, "u_lightVP");
 		setUniform(state.shadowTexel, "u_shadowTexel");
 		setUniform(state.shadowBias, "u_shadowBias");
 		setUniform(2, "u_shadowMap");
