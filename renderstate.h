@@ -17,7 +17,22 @@ struct RenderState {
 	float shadowBias;
 	GLuint shadowTex;
 
-	// SSR inputs
-	GLuint sceneColorPrev;
-	GLuint sceneDepthCopy;
+	// Textures
+	GLuint sceneColor = 0;
+	GLuint sceneDepth = 0;
+	GLuint sceneColorPrev = 0;
+	GLuint sceneDepthCopy = 0;
+
+	// Depth of Field
+	float focusDist = 50.0f;
+	float focusRange = 500.0f;
+
+	// Bloom
+	float bloomThreshold = 0.75f;
+	float bloomSoftKnee = 0.6f;
+	float bloomIntensity = 0.5f;
+
+	// Color grading
+	float saturation = 1.05f;
+	float vibrance = 0.10f;
 };

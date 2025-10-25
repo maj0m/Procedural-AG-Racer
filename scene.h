@@ -43,15 +43,17 @@ class Scene {
 	
 	PostProcessShader* postShader;
 	GLuint sceneFBO = 0;
+	GLuint fsVAO = 0, fsVBO = 0;
+
 	GLuint sceneColor = 0;
 	GLuint sceneDepth = 0;
-	GLuint fsVAO = 0, fsVBO = 0;
+	GLuint prevSceneColor = 0;   // reflection source
+	GLuint sceneDepthCopy = 0;   // depth readback for SSR
 
 	ShadowMap shadow;
 	mat4 lightV, lightP, lightVP;
 
-	GLuint prevSceneColor = 0;   // reflection source
-	GLuint sceneDepthCopy = 0;   // depth readback for SSR
+
 
 	void updateState(RenderState& state) {
 		state.time = glfwGetTime();
@@ -102,8 +104,10 @@ class Scene {
 		glGenTextures(1, &sceneColor);
 		glBindTexture(GL_TEXTURE_2D, sceneColor);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneColor, 0);
 
 		// Depth
@@ -120,8 +124,8 @@ class Scene {
 		glGenTextures(1, &prevSceneColor);
 		glBindTexture(GL_TEXTURE_2D, prevSceneColor);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		// Depth copy for water reflection
 		glGenTextures(1, &sceneDepthCopy);
@@ -129,11 +133,6 @@ class Scene {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		GLenum drawBuffer = GL_COLOR_ATTACHMENT0;
-		glDrawBuffers(1, &drawBuffer);
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) printf("Scene FBO error!\n");
 	}
 
 	void updateLightMatrices() {
@@ -227,6 +226,7 @@ public:
 		postShader->Bind(state);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, sceneColor);
+		glGenerateMipmap(GL_TEXTURE_2D); // generate mipmaps for the scene color so bloom can sample lower mips
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, sceneDepth);
 		glActiveTexture(GL_TEXTURE2);
@@ -292,8 +292,8 @@ public:
 		terrainData.seed = 310;
 
 		// World Config
-		cfg.chunkSize = 256.0f;
-		cfg.renderDist = 8;
+		cfg.chunkSize = 400.0f;
+		cfg.renderDist = 5;
 		cfg.tesselation = 32;
 		cfg.terrain = terrainData;
 
@@ -342,6 +342,19 @@ public:
 		if (palette) {
 			if (palette->DrawImGui("Colors")) {}
 		}
+
+		ImGui::SeparatorText("Depth of Field");
+		ImGui::SliderFloat("Focus Distance", &state.focusDist, 1.0f, 1000.0f);
+		ImGui::SliderFloat("Focus Range", &state.focusRange, 0.1f, 1000.0f);
+
+		ImGui::SeparatorText("Bloom");
+		ImGui::SliderFloat("Threshold", &state.bloomThreshold, 0.1f, 5.0f);
+		ImGui::SliderFloat("Soft Knee", &state.bloomSoftKnee, 0.1f, 1.0f);
+		ImGui::SliderFloat("Intensity", &state.bloomIntensity, 0.0f, 3.0f);
+		
+		ImGui::SeparatorText("Color");
+		ImGui::SliderFloat("Saturation", &state.saturation, 0.0f, 2.5f);
+		ImGui::SliderFloat("Vibrance", &state.vibrance, 0.0f, 1.0f);
 
 		// Terrain Params
 		ImGui::SeparatorText("Terrain Params");
