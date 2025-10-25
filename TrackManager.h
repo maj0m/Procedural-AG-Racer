@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "renderstate.h"
+#include "BedrockHeightCS.h"
 
 struct TrackSegment {
 	vec4 start_r; // a.x,a.y,a.z,r
@@ -12,9 +13,13 @@ public:
 	std::vector<TrackSegment> segments;
 	GLuint segmentsSSBO = 0;   // binding = 4
 	GLuint segmentCount = 0;
+    BedrockHeightCS* bedrockHeightCS;
+    float maxTrackHeight = 200.0f;
 
 	TrackManager(uint32_t seed) {
 		glGenBuffers(1, &segmentsSSBO);
+
+        bedrockHeightCS = new BedrockHeightCS();
 
 		GenerateSegments(seed);
 	}
@@ -137,7 +142,9 @@ public:
                 if (i > 0 && s == 0) continue; // avoid duplicates at span joins
                 float t = float(s) / float(CATMULL_SEGMENTS);
                 vec2 p = catmull(Pm1, P0, P1, P2, t);
-                path.emplace_back(p.x, 0.0f, p.y);
+                float trackHeight;
+                bedrockHeightCS->Dispatch(vec3(p.x, maxTrackHeight, p.y), maxTrackHeight, trackHeight);
+                path.emplace_back(p.x, trackHeight, p.y);
             }
         }
         if (!path.empty()) path.push_back(path.front());
@@ -146,7 +153,7 @@ public:
         for (size_t i = 0; i + 1 < path.size(); ++i) {
             const vec3& a = path[i];
             const vec3& b = path[i + 1];
-            segments.push_back({ vec4(a.x, a.y, a.z, TRACK_RADIUS), vec4(b.x, b.y, b.z, 0.0f) });
+            segments.push_back({ vec4(a.x, a.y, a.z, TRACK_RADIUS), vec4(b.x, b.y, b.z, TRACK_RADIUS) });
         }
 
         BindSegmentSSBO();

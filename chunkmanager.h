@@ -24,11 +24,7 @@ private:
     TrackManager* trackManager = nullptr;
 
 public:
-    ChunkManager(WorldConfig* cfg, SharedResources* resources): cfg(cfg), resources(resources) {
-        trackManager = new TrackManager(cfg->terrain.seed);
-
-        waterObject = new Object(resources->waterShader, resources->waterGeom);
-        
+    ChunkManager(WorldConfig* cfg, SharedResources* resources): cfg(cfg), resources(resources) {        
         // Create shared VAO for all chunks
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -41,6 +37,9 @@ public:
         glBindBufferRange(GL_UNIFORM_BUFFER, 3, terrainUBO, 0, sizeof(TerrainData));
 
         updateTerrainUBO();
+
+        trackManager = new TrackManager(cfg->terrain.seed);
+        waterObject = new Object(resources->waterShader, resources->waterGeom);
     }
 
 
@@ -224,7 +223,7 @@ public:
         float x = trackManager->segments[0].start_r.x;
         float y = trackManager->segments[0].start_r.y;
         float z = trackManager->segments[0].start_r.z;
-        return vec3(x, y + 40.0f, z);
+        return vec3(x, y + 20.0f, z);
     }
 
     bool getSegIndexForPos(const vec3& worldPos, GLuint& outSSBO, GLuint& outCount) const {
@@ -238,8 +237,8 @@ public:
 
     // Setters
     void setTerrainData(const TerrainData& data) {
-        if (cfg->terrain.seed != data.seed) trackManager->GenerateSegments(data.seed);
         cfg->terrain = data;
         updateTerrainUBO();
+        trackManager->GenerateSegments(data.seed);
     }
 };
