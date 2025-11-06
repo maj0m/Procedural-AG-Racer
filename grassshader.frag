@@ -30,9 +30,9 @@ layout(std140, binding = 7) uniform ColorPalette {
     float u_fogDensity;
 };
 
-uniform sampler2D u_shadowMap;
-uniform float     u_shadowBias;
-uniform vec2      u_shadowTexel;
+layout(binding = 2) uniform sampler2D u_shadowMap;
+uniform float u_shadowBias;
+uniform vec2 u_shadowTexel;
 
 in float colorOffset;
 in float viewDist_WS;

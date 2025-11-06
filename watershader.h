@@ -24,10 +24,5 @@ public:
 		setUniform(state.lightVP, "u_lightVP");
 		setUniform(state.shadowTexel, "u_shadowTexel");
 		setUniform(state.shadowBias, "u_shadowBias");
-		setUniform(2, "u_shadowMap");
-
-		// SSR
-		setUniform(3, "u_sceneColor"); // prev frame
-		setUniform(4, "u_sceneDepth"); // copied depth
 	}
 };

@@ -22,6 +22,9 @@
 #include "WorldConfig.h"
 #include "FPSCounter.h"
 #include "ShadowMap.h"
+#include "RenderTarget.h"
+#include "ReflectionBuffer.h"
+#include "PostProcessor.h"
 
 enum class ControlMode { Freecam, Player };
 
@@ -41,18 +44,12 @@ class Scene {
 	MaterialUBO materialsUBO;
 	SharedResources resources;
 	
-	PostProcessShader* postShader;
-	GLuint sceneFBO = 0;
-	GLuint fsVAO = 0, fsVBO = 0;
-
-	GLuint sceneColor = 0;
-	GLuint sceneDepth = 0;
-	GLuint prevSceneColor = 0;   // reflection source
-	GLuint sceneDepthCopy = 0;   // depth readback for SSR
+	RenderTarget sceneTarget;
+	ReflectionBuffer reflection;
+	PostProcessor post;
 
 	ShadowMap shadow;
 	mat4 lightV, lightP, lightVP;
-
 
 
 	void updateState(RenderState& state) {
@@ -67,82 +64,15 @@ class Scene {
 		state.invP = Inverse(state.P);		
 	}
 
-	void createFullscreenTriangle() {
-		if (fsVAO) return;
-		// Fullscreen triangle
-		const float verts[] = {
-			-1.0f, -1.0f,   0.0f, 0.0f,
-			 3.0f, -1.0f,   2.0f, 0.0f,
-			-1.0f,  3.0f,   0.0f, 2.0f
-		};
-		glGenVertexArrays(1, &fsVAO);
-		glGenBuffers(1, &fsVBO);
-		glBindVertexArray(fsVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, fsVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0); // position
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1); // uv
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-		glBindVertexArray(0);
-	}
-
-	void destroyRenderTarget() {
-		if (sceneDepth) { glDeleteTextures(1, &sceneDepth); sceneDepth = 0; }
-		if (sceneColor) { glDeleteTextures(1, &sceneColor); sceneColor = 0; }
-		if (prevSceneColor) { glDeleteTextures(1, &prevSceneColor); prevSceneColor = 0; }
-		if (sceneDepthCopy) { glDeleteTextures(1, &sceneDepthCopy); sceneDepthCopy = 0; }
-		if (sceneFBO) { glDeleteFramebuffers(1, &sceneFBO); sceneFBO = 0; }
-	}
-
-	void createRenderTarget(int w, int h) {
-		destroyRenderTarget();
-		glGenFramebuffers(1, &sceneFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
-
-		// Color
-		glGenTextures(1, &sceneColor);
-		glBindTexture(GL_TEXTURE_2D, sceneColor);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneColor, 0);
-
-		// Depth
-		glGenTextures(1, &sceneDepth);
-		glBindTexture(GL_TEXTURE_2D, sceneDepth);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, sceneDepth, 0);
-
-		// Previous frame for water reflection
-		glGenTextures(1, &prevSceneColor);
-		glBindTexture(GL_TEXTURE_2D, prevSceneColor);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		// Depth copy for water reflection
-		glGenTextures(1, &sceneDepthCopy);
-		glBindTexture(GL_TEXTURE_2D, sceneDepthCopy);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
 
 	void updateLightMatrices() {
 		// Focus the shadow box around the camera
 		vec3 camPos = camera->getPos();
 		vec3 center = vec3(floor(camPos.x / cfg.chunkSize), 0.0f, floor(camPos.z / cfg.chunkSize)) * cfg.chunkSize;
 		vec3 lightDir = -vec3(sun.data.dir.x, sun.data.dir.y, sun.data.dir.z);
-		vec3 lightPos = center - lightDir * 1200.0f;     // pull back enough to see the box
-		float halfSize = 2000.0f;     // covers this much around camera
-		float halfHeight = 2000.0f;
+		vec3 lightPos = center - lightDir * 1200.0f; // pull back enough to see the box
+		float halfSize = 2400.0f; // covers this much around camera
+		float halfHeight = 2400.0f;
 		float nearPlane = camera->getNearPlane();
 		float farPlane = camera->getFarPlane();
 
@@ -162,7 +92,7 @@ public:
 		float deltaTime = fpsCounter.getDeltaTime();
 		updateState(state);
 
-		// Physics + movement
+		// Update chunks and movement
 		chunkManager->Update(camera->getPos());
 		switch (controlMode) {
 			case ControlMode::Freecam: camera->move(deltaTime); break;
@@ -187,7 +117,6 @@ public:
 			state.lightVP = lightVP;
 			state.shadowTexel = vec2(1.0f / shadow.width, 1.0f / shadow.height);
 			state.shadowBias = 0.0025f;
-			state.shadowTex = shadow.depthTex;
 
 			// Draw shadow casters (skip skydome)
 			chunkManager->DrawChunks(state, *camera);
@@ -197,10 +126,13 @@ public:
 			glDisable(GL_POLYGON_OFFSET_FILL);
 			state.V = prevV;
 			state.P = prevP;
+
+			// Bind shadow texture
+			glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, shadow.depthTex);
 		}
 
 		// Render scene to off-screen FBO
-		glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
+		sceneTarget.bind();
 		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -209,47 +141,32 @@ public:
 		chunkManager->DrawChunks(state, *camera);
 		if (controlMode == ControlMode::Player) player->Draw(state);
 
-		// Copy depth for SSR so water can safely sample it
-		glCopyImageSubData(
-			sceneDepth, GL_TEXTURE_2D, 0, 0, 0, 0,
-			sceneDepthCopy, GL_TEXTURE_2D, 0, 0, 0, 0,
-			WINDOW_WIDTH, WINDOW_HEIGHT, 1
-		);
+		// SSR inputs for water relfections
+		reflection.copyDepthFrom(sceneTarget.depth, WINDOW_WIDTH, WINDOW_HEIGHT);
+		glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, reflection.prevSceneColor);
+		glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D, reflection.sceneDepthCopy);
 
-		// Draw water and set SSR textures
-		state.sceneDepthCopy = sceneDepthCopy;
-		state.sceneColorPrev = prevSceneColor;
+		// Draw water
 		chunkManager->DrawWater(state);
-
-		// Post-process
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		postShader->Bind(state);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, sceneColor);
-		glGenerateMipmap(GL_TEXTURE_2D); // generate mipmaps for the scene color so bloom can sample lower mips
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, sceneDepth);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, shadow.depthTex);
-		glBindVertexArray(fsVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		sceneTarget.unbind();
 
 		// Update prevSceneColor for next frame
-		glCopyImageSubData(
-			sceneColor, GL_TEXTURE_2D, 0, 0, 0, 0,
-			prevSceneColor, GL_TEXTURE_2D, 0, 0, 0, 0,
-			WINDOW_WIDTH, WINDOW_HEIGHT, 1
-		);
+		reflection.updatePrevColor(sceneTarget.color, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+		// Post-process
+		post.run(state, sceneTarget.color, sceneTarget.depth, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 		// Draw GUI
 		drawGUI(WINDOW_WIDTH - GUI_WIDTH, 0, GUI_WIDTH, GUI_HEIGHT);
 	}
 
 	void Build() {
-		postShader = new PostProcessShader();
-		createFullscreenTriangle();
-		createRenderTarget(WINDOW_WIDTH, WINDOW_HEIGHT);
+		// Post-processing and SSR
+		post.init();
+		sceneTarget.create(WINDOW_WIDTH, WINDOW_HEIGHT);
+		reflection.create(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+		// Shadow map
 		shadow.init();
 
 		// Color palette
@@ -274,26 +191,26 @@ public:
 		sun.InitUBO();
 
 		// Terrain Data
-		terrainData.bedrockFrequency = 0.003f;
+		terrainData.bedrockFrequency = 0.0015f;
 		terrainData.bedrockAmplitude = 16.0f;
-		terrainData.frequency = 0.0012f;
+		terrainData.frequency = 0.0008f;
 		terrainData.frequencyMultiplier = 2.0f;
-		terrainData.amplitude = 200.0f;
+		terrainData.amplitude = 250.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
-		terrainData.floorLevel = 20.0f;
-		terrainData.waterLevel = 16.0f;
-		terrainData.blendFactor = 32.0f;
+		terrainData.floorLevel = 16.0f;
+		terrainData.waterLevel = 12.0f;
+		terrainData.blendFactor = 30.0f;
 		terrainData.warpFreq = 0.001f;
 		terrainData.warpAmp = 12.0f;
-		terrainData.warpStrength = 30.0f;
+		terrainData.warpStrength = 32.0f;
 		terrainData.warpFreqMult = 2.0f;
 		terrainData.warpAmpMult = 0.5f;
 		terrainData.warpOctaves = 6;
 		terrainData.seed = 310;
 
 		// World Config
-		cfg.chunkSize = 400.0f;
-		cfg.renderDist = 5;
+		cfg.chunkSize = 256.0f;
+		cfg.renderDist = 8;
 		cfg.tesselation = 32;
 		cfg.terrain = terrainData;
 
@@ -308,7 +225,7 @@ public:
 		resources.terrainHeightCS	= new TerrainHeightCS();
 
 		// Shared Geometries
-		resources.waterGeom		= new PlaneGeometry(cfg.chunkSize * (2 * cfg.renderDist + 1), cfg.tesselation * (2 * cfg.renderDist + 1));
+		resources.waterGeom	= new PlaneGeometry(cfg.chunkSize * (2 * cfg.renderDist + 1), cfg.tesselation * (2 * cfg.renderDist + 1));
 
 		for (int i = 0; i < 10; i++) {
 			TreeParams treeParams(i);
@@ -422,5 +339,9 @@ public:
 		if (resources.marchingCubesCS) { delete resources.marchingCubesCS; resources.marchingCubesCS = nullptr; }
 		if (resources.groundDistanceCS) { delete resources.groundDistanceCS; resources.groundDistanceCS = nullptr; }
 		if (resources.terrainHeightCS) { delete resources.terrainHeightCS; resources.terrainHeightCS = nullptr; }
+
+		post.destroy();
+		sceneTarget.destroy();
+		reflection.destroy();
 	}
 };

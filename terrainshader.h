@@ -22,6 +22,5 @@ public:
 		setUniform(state.lightVP, "u_lightVP");
 		setUniform(state.shadowTexel, "u_shadowTexel");
 		setUniform(state.shadowBias, "u_shadowBias");
-		setUniform(2, "u_shadowMap");
 	}
 };

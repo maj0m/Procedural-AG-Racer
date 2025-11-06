@@ -15,13 +15,6 @@ struct RenderState {
 	mat4  lightVP;
 	vec2  shadowTexel;
 	float shadowBias;
-	GLuint shadowTex;
-
-	// Textures
-	GLuint sceneColor = 0;
-	GLuint sceneDepth = 0;
-	GLuint sceneColorPrev = 0;
-	GLuint sceneDepthCopy = 0;
 
 	// Depth of Field
 	float focusDist = 50.0f;

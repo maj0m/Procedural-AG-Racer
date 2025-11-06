@@ -170,10 +170,6 @@ public:
     }
 
     void DrawWater(RenderState& state) {
-        // Bind textures for SSR
-        glActiveTexture(GL_TEXTURE3); glBindTexture(GL_TEXTURE_2D, state.sceneColorPrev);
-        glActiveTexture(GL_TEXTURE4); glBindTexture(GL_TEXTURE_2D, state.sceneDepthCopy);
-
         if (waterObject) waterObject->Draw(state);
     }
 

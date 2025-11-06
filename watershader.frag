@@ -31,9 +31,9 @@ layout(std140, binding = 7) uniform ColorPalette {
     float u_fogDensity;
 };
 
-uniform sampler2D u_sceneColor;
-uniform sampler2D u_sceneDepth;
-uniform sampler2D u_shadowMap;
+layout(binding = 2) uniform sampler2D u_shadowMap;
+layout(binding = 3) uniform sampler2D u_sceneColor;
+layout(binding = 4) uniform sampler2D u_sceneDepth;
 uniform float     u_shadowBias;
 uniform vec2      u_shadowTexel;
 uniform mat4      u_V, u_P;
