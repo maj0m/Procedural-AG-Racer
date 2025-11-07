@@ -182,11 +182,11 @@ public:
             float frequencyMultiplier;
             float amplitude;
             float amplitudeMultiplier;
+            int octaves;
             float floorLevel;
             float blendFactor;
             float warpFreq;
             float warpAmp;
-            float warpStrength;
             float warpFreqMult;
             float warpAmpMult;
             int   warpOctaves;
@@ -199,11 +199,11 @@ public:
             cfg->terrain.frequencyMultiplier,
             cfg->terrain.amplitude,
             cfg->terrain.amplitudeMultiplier,
+            cfg->terrain.octaves,
             cfg->terrain.floorLevel,
             cfg->terrain.blendFactor,
             cfg->terrain.warpFreq,
             cfg->terrain.warpAmp,
-            cfg->terrain.warpStrength,
             cfg->terrain.warpFreqMult,
             cfg->terrain.warpAmpMult,
             cfg->terrain.warpOctaves,

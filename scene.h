@@ -197,12 +197,12 @@ public:
 		terrainData.frequencyMultiplier = 2.0f;
 		terrainData.amplitude = 250.0f;
 		terrainData.amplitudeMultiplier = 0.45f;
+		terrainData.octaves = 6;
 		terrainData.floorLevel = 16.0f;
 		terrainData.waterLevel = 12.0f;
 		terrainData.blendFactor = 30.0f;
 		terrainData.warpFreq = 0.001f;
 		terrainData.warpAmp = 12.0f;
-		terrainData.warpStrength = 32.0f;
 		terrainData.warpFreqMult = 2.0f;
 		terrainData.warpAmpMult = 0.5f;
 		terrainData.warpOctaves = 6;
@@ -281,6 +281,7 @@ public:
 		ImGui::SliderFloat("Frequency Multiplier", &terrainData.frequencyMultiplier, 1.0f, 3.0f);
 		ImGui::SliderFloat("Amplitude", &terrainData.amplitude, 0.01f, 500.0f);
 		ImGui::SliderFloat("Amplitude Multiplier", &terrainData.amplitudeMultiplier, 0.1f, 1.0f);
+		ImGui::SliderInt("Octaves", &terrainData.octaves, 1, 8);
 		ImGui::SliderFloat("Floor Level", &terrainData.floorLevel, -50.0f, 50.0f);
 		ImGui::SliderFloat("Blend Factor", &terrainData.blendFactor, 0.0f, 100.0f);
 		ImGui::SliderFloat("Water Level", &terrainData.waterLevel, 0.0f, 50.0f);
@@ -288,7 +289,6 @@ public:
 		ImGui::SeparatorText("Warp");
 		ImGui::SliderFloat("Warp Frequency", &terrainData.warpFreq, 0.0001f, 0.004f, "%.4f");
 		ImGui::SliderFloat("Warp Amplitude", &terrainData.warpAmp, 0.0f, 100.0f);
-		ImGui::SliderFloat("Warp Strength", &terrainData.warpStrength, 0.0f, 100.0f);
 		ImGui::SliderFloat("Warp Freq. Mul.", &terrainData.warpFreqMult, 0.0f, 1.0f);
 		ImGui::SliderFloat("Warp Ampl. Mul.", &terrainData.warpAmpMult, 0.0f, 2.0f);
 		ImGui::SliderInt("Warp Octaves", &terrainData.warpOctaves, 1, 8);

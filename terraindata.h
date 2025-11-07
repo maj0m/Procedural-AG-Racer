@@ -8,12 +8,12 @@ struct TerrainData {
 	float frequencyMultiplier;
 	float amplitude;
 	float amplitudeMultiplier;
+	int octaves;
 	float floorLevel;
 	float blendFactor;
 
 	float warpFreq;
 	float warpAmp;
-	float warpStrength;
 	float warpFreqMult;
 	float warpAmpMult;
 	int   warpOctaves;

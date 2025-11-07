@@ -11,11 +11,11 @@ layout(std140, binding = 3) uniform TerrainParams {
     float u_frequencyMultiplier;
     float u_amplitude;
     float u_amplitudeMultiplier;
+	int u_octaves;
     float u_floorLevel;
     float u_blendFactor;
     float u_warpFreq;
     float u_warpAmp;
-    float u_warpStrength;
     float u_warpFreqMult;
     float u_warpAmpMult; 
     int u_warpOctaves;
