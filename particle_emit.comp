@@ -1,0 +1,114 @@
+#version 450 core
+layout(local_size_x = 128) in;
+
+struct Particle {
+    vec4 pos;
+    vec4 vel;
+    vec4 col;
+    vec4 ext;  // x=age, y=lifetime, z=size, w=type
+};
+
+struct Emitter {
+    vec4 pos_rad;
+    vec4 dir_spread;
+    vec4 life_size_rate_type;
+    vec4 color;
+};
+
+layout(std430, binding = 0) buffer Particles {
+    Particle particles[];
+};
+
+layout(std430, binding = 1) buffer FreeList {
+    uint freeCount;
+    uint freeIdx[];
+};
+
+layout(std430, binding = 2) buffer Emitters {
+    uint emitterCount;
+    Emitter emitters[];
+};
+
+uniform float u_time;
+uniform float u_dt;
+
+// ---------- Helpers ----------
+float hash(float p) {
+     uint u = floatBitsToUint(p * 3141592653.0);
+     return float(u * u * 3141592653u) / float(~0u);
+}
+
+float cbrt(float x) {
+    return pow(abs(x), 1.0 / 3.0);
+}
+
+// ---------- Random points ---------
+vec3 randInSphere(float seed) {
+    float u = hash(seed + 1.0);
+    float v = hash(seed + 2.0);
+    float theta = 6.2831853 * u;
+    float phi = acos(2.0 * v - 1.0);
+    float r = cbrt(hash(seed + 3.0));
+    float sinTheta = sin(theta);
+    float cosTheta = cos(theta);
+    float sinPhi = sin(phi);
+    float cosPhi = cos(phi);
+    float x = r * sinPhi * cosTheta;
+    float y = r * sinPhi * sinTheta;
+    float z = r * cosPhi;
+    return vec3(x, y, z);
+}
+
+vec3 sampleCone(vec3 baseDir, float angle, float seed) {
+    baseDir = normalize(baseDir);
+    vec3 up = abs(baseDir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 t = normalize(cross(up, baseDir));
+    vec3 b = cross(baseDir, t);
+    float u = hash(seed + 4.0);
+    float v = hash(seed + 5.0);
+    float cosA = mix(1.0, cos(angle), u);
+    float sinA = sqrt(max(0.0, 1.0 - cosA * cosA));
+    float phi  = 6.2831853 * v;
+    return normalize(t * (cos(phi) * sinA) + b * (sin(phi) * sinA) + baseDir * cosA);
+}
+
+// ---------- Main ---------
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+    if (gid >= emitterCount) return;
+
+    Emitter e = emitters[gid];
+    float life = e.life_size_rate_type.x;
+    float size = e.life_size_rate_type.y;
+    float rate = e.life_size_rate_type.z;
+    float type = e.life_size_rate_type.w;
+
+    int spawnCount = int(rate * u_dt);
+    for (int i = 0; i < spawnCount; ++i) {
+        uint available = atomicAdd(freeCount, 0u);
+        if (available == 0u) break;
+
+        uint slot = atomicAdd(freeCount, uint(-1)) - 1u;
+        uint pid  = freeIdx[slot];
+
+        float seed = u_time + i;
+        vec3 pos = e.pos_rad.xyz + randInSphere(seed) * e.pos_rad.w;
+        vec3 dir = sampleCone(e.dir_spread.xyz, e.dir_spread.w, seed);
+        float speed = 0.0;
+
+        // Ambient
+        if (type == 0.0) {
+            speed = 1.0;
+        // Trail
+        } else if (type == 1.0) {
+            speed = 0.0;
+        }
+
+        Particle p;
+        p.pos = vec4(pos, 1.0);
+        p.vel = vec4(dir * speed, 0.0);
+        p.col = e.color;
+        p.ext = vec4(0.0, life, size, type);
+        particles[pid] = p;
+    }
+}

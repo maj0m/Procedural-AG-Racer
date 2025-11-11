@@ -25,6 +25,7 @@
 #include "RenderTarget.h"
 #include "ReflectionBuffer.h"
 #include "PostProcessor.h"
+#include "ParticleSystem.h";
 
 enum class ControlMode { Freecam, Player };
 
@@ -50,6 +51,8 @@ class Scene {
 
 	ShadowMap shadow;
 	mat4 lightV, lightP, lightVP;
+
+	ParticleSystem* particleSystem;
 
 
 	void updateState(RenderState& state) {
@@ -98,6 +101,7 @@ public:
 			case ControlMode::Freecam: camera->move(deltaTime); break;
 			case ControlMode::Player:  player->Update(deltaTime); break;
 		}
+		particleSystem->Update(state.time, deltaTime, player->getPos(), player->getForward());
 		
 		if (fpsCounter.getFrameCount() % 10 == 0) {
 			// Shadow pass
@@ -131,7 +135,7 @@ public:
 			glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, shadow.depthTex);
 		}
 
-		// Render scene to off-screen FBO
+		// Bind scene target
 		sceneTarget.bind();
 		glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -148,6 +152,11 @@ public:
 
 		// Draw water
 		chunkManager->DrawWater(state);
+
+		// Draw particles
+		particleSystem->Draw(state);
+
+		// Unbind scene target
 		sceneTarget.unbind();
 
 		// Update prevSceneColor for next frame
@@ -238,6 +247,7 @@ public:
 		camera = new Camera();
 		camera->setPos(chunkManager->getSpawnPoint());
 		player = new Player(camera, chunkManager);
+		particleSystem = new ParticleSystem();
 	}
 
 	void drawGUI(int x, int y, int w, int h) {

@@ -1,0 +1,74 @@
+#version 450 core
+layout(local_size_x = 256) in;
+
+struct Particle {
+    vec4 pos;
+    vec4 vel;
+    vec4 col;
+    vec4 ext;   // x=age, y=lifetime, z=size, w=type
+};
+
+layout(std430, binding = 0) buffer Particles {
+    Particle particles[];
+};
+
+layout(std430, binding = 1) buffer FreeList {
+    uint freeCount;
+    uint freeIdx[];
+};
+
+uniform float u_dt;
+uniform int u_count;
+
+// ---------- Main ----------
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= uint(u_count)) return;
+
+    Particle p = particles[id];
+    vec3  pos  = p.pos.xyz;
+    vec3  vel  = p.vel.xyz;
+    float age  = p.ext.x;
+    float life = p.ext.y;
+    float type = p.ext.w;
+    
+    // Dead
+    if (life <= 0.0) {
+        return;
+    }
+
+    // Ambient
+    if (type == 0.0) {
+        float gid = float(gl_GlobalInvocationID.x);
+        vec3 wind = vec3(sin(0.27*age + gid*0.013), 0.15, cos(0.23*age + gid*0.017)) * 0.8;
+        vel += wind * u_dt;
+        vel *= (1.0 - 0.5 * u_dt);
+    // Trail
+    } else if (type == 1.0) {
+        vel *= 0.0;
+    }
+
+    pos += vel * u_dt;
+    age += u_dt;
+
+    // If dead, push to freelist
+    if (age >= life) {
+        // mark as dead
+        p.ext.x = 0.0;  // age
+        p.ext.y = 0.0;  // life
+        p.col.a = 0.0;
+
+        // push id
+        uint slot = atomicAdd(freeCount, 1u);
+        freeIdx[slot] = id;
+
+        particles[id] = p;
+        return;
+    }
+
+    // write back
+    p.pos.xyz = pos;
+    p.vel.xyz = vel;
+    p.ext.x = age;
+    particles[id] = p;
+}
